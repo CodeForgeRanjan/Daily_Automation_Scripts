@@ -266,7 +266,7 @@ if uber_file is not None and master_file is not None:
             final['Address'] = df['Cleaned_Address']
             final['Pin_Code'] = df['PIN_Extracted']
             final['Insuff'] = ""
-            final['City'] = df['DISTRICT'].fillna('NA')
+            final['City'] = df[''].fillna('8440')
             
             if 'City ID/District ID' in df.columns:
                 final['flow_city_id'] = df['City ID/District ID'].apply(format_id)
