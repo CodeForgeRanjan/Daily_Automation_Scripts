@@ -154,7 +154,7 @@ if page == "Uber Data Upload":
                 final['Permanent_Insufficiency'] = ""
                 final['Name'] = ""
                 final['Type'] = ""
-                final['Address'] = df['Cleaned_Address']
+                final['Address'] = df['Complete_Address']
                 final['Pin_Code'] = df['PIN_Extracted']
                 final['Insuff'] = ""
                 final['City'] = df['DISTRICT'].fillna('NA')
@@ -184,7 +184,7 @@ if page == "Uber Data Upload":
             st.download_button(
                 label=" Download Processed CSV File",
                 data=csv_output,
-                file_name="uber(1).csv",
+                file_name="Uber csv (1).csv",
                 mime="text/csv"
             )
 
