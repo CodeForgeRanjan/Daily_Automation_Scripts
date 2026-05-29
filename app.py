@@ -105,7 +105,8 @@ if page == "Uber Data Upload":
         
     with col2:
         st.subheader("2. Pincode Master Data")
-        master_file = st.file_uploader("Upload Pincode Master File", type=["xlsx", "xls"], key="master_file", placeholder="Upload PIN CODE file")
+        # master_file = st.file_uploader("Upload Pincode Master File", type=["xlsx", "xls"], key="master_file", placeholder="Upload PIN CODE file")
+    master_file = st.file_uploader("Upload Pincode Master File", type=["xlsx", "xls"], key="master_file")
 
     if uber_file is not None and master_file is not None:
         try:
