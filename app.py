@@ -118,8 +118,8 @@ if page == "Uber Data Upload":
                 # --- APPLY CLEANING ---
                 df['Candidate Name'] = df.iloc[:, 1].apply(clean_text_proper)
                 df['Father Name'] = df.iloc[:, 2].apply(clean_text_proper)
-                df['Cleaned_Address'] = df.iloc[:, 4].apply(clean_address)
-                df['PIN_Extracted'] = df['Cleaned_Address'].apply(extract_pin)
+                df['Complete_Address'] = df.iloc[:, 4].apply(clean_address)
+                df['PIN_Extracted'] = df['Complete_Address'].apply(extract_pin)
 
                 # Name Split logic
                 df[['First', 'Middle', 'Last']] = df['Candidate Name'].apply(lambda x: pd.Series(split_name(x)))
