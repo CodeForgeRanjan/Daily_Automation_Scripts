@@ -91,7 +91,7 @@ def remove_illegal_chars(val):
 
 # ----------------- SIDEBAR NAVIGATION -----------------
 st.sidebar.markdown('<p class="sidebar-heading">🚗 Navigation Menu</p>', unsafe_allow_html=True)
-page = st.sidebar.radio("Go to:", ["Uber Data Upload", "Image Converted","About Tool"])
+page = st.sidebar.radio("Go to:", ["Uber Data Upload", "Image Converted", "msg conversion", "ARS Check updation" ,"About Tool"])
 
 if page == "Uber Data Upload":
     st.markdown('<p class="main-title">Uber Data CleanUp Dashboard</p>', unsafe_allow_html=True)
