@@ -195,7 +195,6 @@ if page == "Uber Data Upload":
     elif uber_file is not None and master_file is None:
         st.info("💡 Please upload the Pincode Master file to process automatic City & City ID mapping.")
 
-
             # Show live preview of processed data
             st.subheader("Preview of Processed Output (Top 5 Rows)")
             st.dataframe(final.head(5))
@@ -212,8 +211,6 @@ if page == "Uber Data Upload":
                 file_name="uber(1).csv",  #Update csv name
                 mime="text/csv"
             )
-
-      
 
 elif page == "About Tool":
     st.markdown('<p class="main-title"> About Uber Cleanup Automation</p>', unsafe_allow_html=True)
