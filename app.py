@@ -105,8 +105,7 @@ if page == "Uber Data Upload":
         
     with col2:
         st.subheader("2. Pincode Master Data")
-        # master_file = st.file_uploader("Upload Pincode Master File", type=["xlsx", "xls"], key="master_file", placeholder="Upload PIN CODE file")
-    master_file = st.file_uploader("Upload Pincode Master File", type=["xlsx", "xls"], key="master_file")
+        master_file = st.file_uploader("Upload Pincode Master File", type=["xlsx", "xls"], key="master_file")
 
     if uber_file is not None and master_file is not None:
         try:
@@ -140,7 +139,7 @@ if page == "Uber Data Upload":
                 final['First_Name'] = df['First']
                 final['Middle_Name'] = df['Middle']
                 final['Last_Name'] = df['Last']
-                final['Father_Name'] = df['Father Name'] # Cleaning function 
+                final['Father_Name'] = df['Father Name']
                 final['Mobile_No'] = ""
                 final['DOB'] = df.iloc[:, 3].apply(format_dob)
                 final['Location'] = "496380"
@@ -155,7 +154,7 @@ if page == "Uber Data Upload":
                 final['Permanent_Insufficiency'] = ""
                 final['Name'] = ""
                 final['Type'] = ""
-                final['Address'] = df['Cleaned_Address'] # Address format chnages
+                final['Address'] = df['Cleaned_Address']
                 final['Pin_Code'] = df['PIN_Extracted']
                 final['Insuff'] = ""
                 final['City'] = df['DISTRICT'].fillna('NA')
@@ -173,55 +172,34 @@ if page == "Uber Data Upload":
             st.success("Process Completed Successfully! Balle Balle!")
             
             # Show live preview of processed data
-            st.subheader("Preview of Processed Output (Top 5 Rows)")
+            st.subheader("Preview of Processed Output (Top 25 Rows)")
             st.dataframe(final.head(5))
 
-            # Conversion back to Excel formatting for memory download
-            towrite = io.BytesIO()
-            final.to_excel(towrite, index=False, engine='openpyxl')
-            towrite.seek(0)
+            # Memory string buffer setup for CSV stable download
+            csv_buffer = io.StringIO()
+            final.to_csv(csv_buffer, index=False)
+            csv_output = csv_buffer.getvalue()
             
-            # Download Button
+            # Stable Download Button for CSV Output
             st.download_button(
-                label="📥 Download Uber Processed Output Excel",
-                data=towrite,
-                file_name="Uber_Final_Process_Output.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                label=" Download Processed CSV File",
+                data=csv_output,
+                file_name="uber(1).csv",
+                mime="text/csv"
             )
 
         except Exception as e:
             st.error(f"Kuch error aaya hai setup me: {e}")
             
     elif uber_file is not None and master_file is None:
-        st.info("💡 Please upload the Pincode Master file to process automatic City & City ID mapping.")
-
-            # Show live preview of processed data
-            st.subheader("Preview of Processed Output (Top 5 Rows)")
-            st.dataframe(final.head(5))
-
-            # Here's the update: Use a string buffer converted to CSV format instead of Excel
-            csv_buffer = io.StringIO()
-            final.to_csv(csv_buffer, index=False)
-            csv_output = csv_buffer.getvalue()
-            
-            # Beautiful & Stable Download Button
-            st.download_button(
-                label="Download Processed CSV File",
-                data=csv_output,
-                file_name="uber(1).csv",  #Update csv name
-                mime="text/csv"
-            )
+        st.info(" Please upload the Pincode Master file to process automatic City & City ID mapping.")
 
 elif page == "About Tool":
-    st.markdown('<p class="main-title"> About Uber Cleanup Automation</p>', unsafe_allow_html=True)
+    st.markdown('<p class="main-title">About Uber Cleanup Automation</p>', unsafe_allow_html=True)
     st.write("""
         This tool replaces the older Excel VBA Macros approach with a modern, fast, and secure Python Pandas workflow.
         - **Exact Portal Schema:** Columns are strictly mapped according to system requirements.
-        - **Data Cleaning:** Removes unwanted keywords like Aadhar, DL, and formatting anomalies.
+        - **Data Cleaning:** Removes unwanted keywords like labels, types, and formatting anomalies.
         - **Smart Regex:** Captures 6-digit Pincodes even if they are merged directly into text (e.g., Coimbatore641006).
         - **Automated VLOOKUP:** Automatically matches pincodes with district databases to output clear City Names and system ID codes.
     """)
-
-
-
-
