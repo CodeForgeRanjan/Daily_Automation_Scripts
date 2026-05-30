@@ -163,18 +163,13 @@ if page == "Uber Data Upload":
                     final['City'] = df['City ID/District ID'].apply(format_id)
                 else:
                     final['City'] = "NA"
-                    
-                # final['Priority'] = ""
 
                 final['Priority'] = ""
 
-                # --- NEW LOGIC: Missing City & Pin Fallback to 8440 ---
-                # Agar City == 'NA' hai aur Pin_Code khali hai, toh City ko '8440' set karein
+                # Missing City & Pin Fallback 
+                # IF City == 'NA' and Pin_Code is blank, then set City '8440'
                 missing_mask = (final['City'] == 'NA') & ((final['Pin_Code'] == '') | (final['Pin_Code'].isna()))
                 final.loc[missing_mask, 'City'] = '8440'
-
-                # Remove illegal characters from final structure
-                final = final.map(remove_illegal_chars)
 
                 # Remove illegal characters from final structure
                 final = final.map(remove_illegal_chars)
