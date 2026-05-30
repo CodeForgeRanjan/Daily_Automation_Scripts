@@ -207,7 +207,7 @@ if page == "Uber Data Upload":
     elif uber_file is not None and master_file is None:
         st.info(" Please upload the Pincode Master file to process automatic City & City ID mapping.")
 
-# ================= NEW PAGE 2: IMAGE CONVERTED (IMAGE TO PDF) =================
+# ================= IMAGE CONVERTED (IMAGE TO PDF) =================
 elif page == "Image Converted":
     st.markdown('<p class="main-title"> Image to PDF Converter</p>', unsafe_allow_html=True)
     st.write("Upload one or multiple images (PNG, JPG, JPEG) to convert them into a single compiled PDF file.")
@@ -257,7 +257,7 @@ elif page == "Image Converted":
                         
                         # Download Button for PDF
                         st.download_button(
-                            label="📥 Download Your Compiled PDF",
+                            label="Download Your Compiled PDF",
                             data=pdf_data,
                             file_name="Converted_Images_Report.pdf",
                             mime="application/pdf",
