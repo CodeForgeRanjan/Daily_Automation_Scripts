@@ -157,7 +157,7 @@ if page == "Uber Data Upload":
                 final['Complete_Address'] = df['Cleaned_Address']
                 final['Pin_Code'] = df['PIN_Extracted']
                 final['Insuff'] = ""
-                final['City'] = df['DISTRICT'].fillna('NA')
+                final['City'] = df['DISTRICT'].fillna('8400')
                 
                 if 'City ID/District ID' in df.columns:
                     final['City'] = df['City ID/District ID'].apply(format_id)
