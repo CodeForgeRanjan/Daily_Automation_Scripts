@@ -12,7 +12,7 @@ st.markdown("""
     .main-title {
         font-size: 44px;
         font-weight: bold;
-        color: #111111;
+        color: #ff8e00;
         text-align: center;
         padding: 10px;
         background: linear-gradient(90deg, #F9D423 0%, #FF4E50 100%);
