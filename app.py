@@ -154,7 +154,7 @@ if page == "Uber Data Upload":
                 final['Permanent_Insufficiency'] = ""
                 final['Name'] = ""
                 final['Type'] = ""
-                final['Address'] = df['Address']
+                final['Complete_Address'] = df['Address']
                 final['Pin_Code'] = df['PIN_Extracted']
                 final['Insuff'] = ""
                 final['City'] = df['DISTRICT'].fillna('NA')
