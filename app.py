@@ -157,19 +157,19 @@ if page == "Uber Data Upload":
                 final['Complete_Address'] = df['Cleaned_Address']
                 final['Pin_Code'] = df['PIN_Extracted']
                 final['Insuff'] = ""
-                final['City'] = df['DISTRICT'].fillna('8400')
+                final['City'] = df['DISTRICT'].fillna('NA')
                 
                 if 'City ID/District ID' in df.columns:
                     final['City'] = df['City ID/District ID'].apply(format_id)
                 else:
-                    final['City'] = "8400"
+                    final['City'] = "NA"
                     
                 final['Priority'] = ""
 
                 # Remove illegal characters from final structure
                 final = final.map(remove_illegal_chars)
 
-            st.success("Process Completed Successfully! Balle Balle!")
+            st.success("Process Completed Successfully!")
             
             # Show live preview of processed data
             st.subheader("Preview of Processed Output (Top 5 Rows)")
