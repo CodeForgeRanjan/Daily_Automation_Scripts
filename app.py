@@ -230,7 +230,7 @@ elif page == "Image Converted":
                     img_list = []
                     
                     for uploaded_img in uploaded_images:
-                        # Image open from pillow 
+                        # Image open from pillow
                         img = Image.open(uploaded_img)
                         # If image RGBA format then (transparent PNG), use RGB then convert to PDF 
                         if img.mode in ('RGBA', 'LA', 'P'):
@@ -246,9 +246,9 @@ elif page == "Image Converted":
                         # Save as PDF by appending the first image to all the other images
                         first_img = img_list[0]
                         first_img.save(
-                            pdf_buffer, 
-                            format="PDF", 
-                            save_all=True, 
+                            pdf_buffer,
+                            format="PDF",
+                            save_all=True,
                             append_images=img_list[1:]
                         )
                         pdf_data = pdf_buffer.getvalue()
@@ -269,21 +269,40 @@ elif page == "Image Converted":
 # PLACEHOLDERS FOR FUTURE WORK 
 elif page == "msg conversion":
     st.markdown('<p class="main-title">Message Conversion Dashboard</p>', unsafe_allow_html=True)
-    st.info("Work in progress... Yeh route message formatting aur logs conversion ke liye use hoga.")
+    st.info("Work in progress...This route will be used for message formatting and log conversion.")
 
 elif page == "ARS Check updation":
     st.markdown('<p class="main-title"> ARS Check Updation</p>', unsafe_allow_html=True)
-    st.info("Work in progress... Yeh route background verification portal automation ke liye placeholder hai.")
+    st.info("Work in progress... This route is a placeholder for the background verification portal automation.")
 
 
 
 
 elif page == "About Tool":
-    st.markdown('<p class="main-title">About Cleanup Automation</p>', unsafe_allow_html=True)
-    st.write("""
-        This tool replaces the older Excel VBA Macros approach with a modern, fast, and secure Python Pandas workflow.
-        - **Exact Portal Schema:** Columns are strictly mapped according to system requirements.
-        - **Data Cleaning:** Removes unwanted keywords like labels, types, and formatting anomalies.
-        - **Smart Regex:** Captures 6-digit Pincodes even if they are merged directly into text (e.g., Coimbatore641006).
-        - **Automated VLOOKUP:** Automatically matches pincodes with district databases to output clear City Names and system ID codes.
+    st.markdown('<p class="main-title"> About Automation Utility Tool</p>', unsafe_allow_html=True)
+    
+    st.markdown("""
+    ###  Overview
+    This central automation hub replaces slow, manual Excel workflows and legacy VBA macros with high-speed, secure **Python Streamlit & Pandas cloud pipelines**.
+    It is custom-built to optimize day-to-day background verification (BGV) and data processing pipelines.
+
+    ---
+
+    ###  Key Modules & Features
+
+    #### 1.  Uber Data CleanUp Dashboard
+    - **Exact Portal Schema Mapping:** Columns are dynamically structured and ordered to match system ingestion layouts precisely.
+    - **Advanced Text Sanitization:** Automatically strips illegal non-printable characters, fixes punctuation, and applies proper Title Case to candidate and father names.
+    - **Address Deep-Cleaning:** Uses regular expressions (Regex) to purge junk strings like *"Aadhar Address:"*, *"Rent Agreement:"*, *"DL"*, and *":"* from applicant files.
+    - **Smart Regex PIN Extraction:** Isolates 6-digit postal codes instantly, even when compressed inside stuck text blocks (e.g., *Coimbatore641006*).
+    - **Automated Pincode VLOOKUP:** Performs an optimized memory merge against your Master Pincode file to auto-populate City names and Flow City IDs.
+    - **Smart Fallback Engine:** Automatically detects rows where both Pincode is missing and City is mapped as 'NA', over-writing them with the system fallback code **`8440`**.
+
+    #### 2.  Image to PDF Converter
+    - **Multi-File Batch Processing:** Upload multiple formats (`.png`, `.jpg`, `.jpeg`) concurrently.
+    - **Single-File Compilation:** Automatically flattens and groups separate document scans into a single, clean, and chronologically compiled PDF report.
+    - **RGBA Transparency Fix:** Built-in Pillow conversion handles alpha-channels and transparent images seamlessly to prevent engine crashes.
+
+    #### 3.  Future Pipeline Modules
+    - **msg conversion & ARS Check updation:** Dedicated pipelines currently reserved as placeholders for downstream integration of communication logs and portals mapping.
     """)
