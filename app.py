@@ -10,7 +10,7 @@ st.set_page_config(page_title="Uber Data CleanUp Tool", page_icon="🚗", layout
 st.markdown("""
     <style>
     .main-title {
-        font-size: 38px;
+        font-size: 44px;
         font-weight: bold;
         color: #111111;
         text-align: center;
