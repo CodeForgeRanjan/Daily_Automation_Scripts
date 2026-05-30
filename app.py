@@ -205,7 +205,7 @@ if page == "Uber Data Upload":
         st.info(" Please upload the Pincode Master file to process automatic City & City ID mapping.")
 
 elif page == "About Tool":
-    st.markdown('<p class="main-title">About Uber Cleanup Automation</p>', unsafe_allow_html=True)
+    st.markdown('<p class="main-title">About Cleanup Automation</p>', unsafe_allow_html=True)
     st.write("""
         This tool replaces the older Excel VBA Macros approach with a modern, fast, and secure Python Pandas workflow.
         - **Exact Portal Schema:** Columns are strictly mapped according to system requirements.
