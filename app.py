@@ -49,7 +49,7 @@ def clean_address(text):
         "DL-", "CARD", "card", "Adhar-", "Adhar No.", "DL", "Driving License", 
         "Driving Licence", "Driving Lic", "ADD","Driving Lc", "Licence", "License", 
         "Address", "Permanent Address", "Present Address", 
-        "CORRESPONDENCE ADDRESS", "CORRESPONDENCE", "PERMANENT:", ":"
+        "CORRESPONDENCE ADDRESS", "CORRESPONDENCE", "PERMANENT:", ":", "-", ";"
     ]
     for word in unwanted:
         text = re.sub(word, '', text, flags=re.IGNORECASE)
