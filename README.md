@@ -1,17 +1,37 @@
-# Daily_Automation_Scripts
-A collection of Python scripts for data cleaning, file conversion, and workflow automation.
+# Multi-Utility Automation Pipeline Tool
 
-Welcome to my daily automation repository! This project is a curated collection of powerful, time-saving scripts designed to automate repetitive tasks, handle complex file conversions, and clean data efficiently.
+A cloud-based automated system built using **Python (Streamlit & Pandas)** to optimize and completely eliminate manual operations in background  data pipelines. 
 
-###  What's Inside?
-1. **Uber Data Clean Up:** Scripts to process, filter, and structure raw Uber data.
-2. **Image to PDF Converter:** Quick conversion utility for JPEG and PNG images into a single PDF.
-3. **MSG File Conversion:** Extracts and converts Outlook `.msg` files into accessible formats.
-4. **ARS Automation:** Custom scripts to streamline ARS workflows and reduce manual efforts.
+##  Key Features
 
+### 1. Uber BGC Data CleanUp
+- **Data Ingestion Alignment:** Maps and re-orders raw CSV inputs directly into system-compatible portal schemas.
+- **Name & Address Sanitization:** Auto-strips system-breaking phrases (e.g., *Aadhar Address, DL-, Present Address, Agreement*) and applies standard title-casing.
+- **Smart Pincode Regex Extraction:** Extracts 6-digit Pincodes even when fused directly with letters or words.
+- **Automated Master Mapping (VLOOKUP):** Instantly merges master databases to update City Names and District System IDs.
+- **Conditional Data Fallback:** Automatically replaces missing Pincodes and 'NA' Cities with system default **`8440`** to prevent ingestion failure.
 
-This tool replaces the older Excel VBA Macros approach with a modern, fast, and secure Python Pandas workflow.
-        - **Exact Portal Schema:** Columns are strictly mapped according to system requirements.
-        - **Data Cleaning:** Removes unwanted keywords like Aadhar, DL, and formatting anomalies.
-        - **Smart Regex:** Captures 6-digit Pincodes even if they are merged directly into text (e.g., Coimbatore641006).
-        - **Automated VLOOKUP:** Automatically matches pincodes with district databases to output clear City Names and system ID codes.
+### 2. Bulk Image to PDF Converter
+- Accepts batch uploads of `.png`, `.jpg`, and `.jpeg`.
+- Merges separate document/ID scans into a single compiled `.pdf` file.
+- Handles transparent PNG backgrounds (RGBA to RGB conversion) automatically.
+
+---
+
+##  Tech Stack & Architecture
+- **Frontend / UI:** Streamlit Web Framework
+- **Data Processing Engine:** Python Pandas & NumPy
+- **String Manipulation:** Advanced Regular Expressions (Regex)
+- **Image Conversion Engine:** Pillow (PIL)
+
+---
+
+##  Local Setup and Deployment
+
+### 1. Prerequisites
+Ensure Python installed on your local machine.
+
+### 2. Installation
+Clone the repository and install the required tracking libraries:
+```bash
+pip install -r requirements.txt
