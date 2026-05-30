@@ -107,6 +107,13 @@ if page == "Uber Data Upload":
         st.subheader("2. Pincode Master Data")
         master_file = st.file_uploader("Upload Pincode Master File", type=["xlsx", "xls"], key="master_file")
 
+    # --- CLEAR BUTTON LOGIC ---
+    if uber_file is not None or master_file is not None:
+        st.markdown("---")
+        if st.button("🧹 Clear Dashboard & Reset Files", use_container_width=True):
+            st.cache_data.clear()
+            st.rerun()
+
     if uber_file is not None and master_file is not None:
         try:
             with st.spinner("Processing your data... Please wait..."):
@@ -198,9 +205,6 @@ if page == "Uber Data Upload":
             
     elif uber_file is not None and master_file is None:
         st.info(" Please upload the Pincode Master file to process automatic City & City ID mapping.")
-
-with col2:
-        master_file = st.file_uploader("Upload Pincode Master File", type=["xlsx", "xls"], key="master_file")
 
 elif page == "About Tool":
     st.markdown('<p class="main-title">About Cleanup Automation</p>', unsafe_allow_html=True)
