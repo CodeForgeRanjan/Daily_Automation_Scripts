@@ -22,7 +22,7 @@ st.markdown("""
         border-bottom: 3px solid #FF4E50;
     }
     .sidebar-heading {
-        font-size: 22px;
+        font-size: 38px;
         font-weight: bold;
         color: #00ffff;
         margin-bottom: 15px;
