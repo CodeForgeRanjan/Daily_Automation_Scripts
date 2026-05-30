@@ -2,9 +2,10 @@ import streamlit as st
 import pandas as pd
 import re
 import io
+from PIL import Image
 
 # Page Setup & Styling
-st.set_page_config(page_title="Uber Data CleanUp Tool", page_icon="🚗", layout="wide")
+st.set_page_config(page_title="Multi-Utility Automation Tool", page_icon="🚗", layout="wide")
 
 # Custom CSS for Professional UI Design
 st.markdown("""
@@ -205,6 +206,77 @@ if page == "Uber Data Upload":
             
     elif uber_file is not None and master_file is None:
         st.info(" Please upload the Pincode Master file to process automatic City & City ID mapping.")
+
+# ================= NEW PAGE 2: IMAGE CONVERTED (IMAGE TO PDF) =================
+elif page == "Image Converted":
+    st.markdown('<p class="main-title"> Image to PDF Converter</p>', unsafe_allow_html=True)
+    st.write("Upload one or multiple images (PNG, JPG, JPEG) to convert them into a single compiled PDF file.")
+
+    # Multi-file uploader for images
+    uploaded_images = st.file_uploader(
+        "Upload Images", 
+        type=["png", "jpg", "jpeg"], 
+        accept_multiple_files=True, 
+        key="pdf_uploader"
+    )
+
+    if uploaded_images:
+        st.success(f"Total {len(uploaded_images)} images uploaded.")
+        
+        # Save the first image as a PDF with all the other images combined
+        if st.button("Convert Images to PDF"):
+            try:
+                with st.spinner("Converting images... Please wait..."):
+                    img_list = []
+                    
+                    for uploaded_img in uploaded_images:
+                        # Image open from pillow 
+                        img = Image.open(uploaded_img)
+                        # If image RGBA format then (transparent PNG), use RGB then convert to PDF 
+                        if img.mode in ('RGBA', 'LA', 'P'):
+                            img = img.convert('RGB')
+                        else:
+                            img = img.convert('RGB')
+                        img_list.append(img)
+                    
+                    if img_list:
+                        # Memory buffer setup PDF 
+                        pdf_buffer = io.BytesIO()
+                        
+                        # Save as PDF by appending the first image to all the other images
+                        first_img = img_list[0]
+                        first_img.save(
+                            pdf_buffer, 
+                            format="PDF", 
+                            save_all=True, 
+                            append_images=img_list[1:]
+                        )
+                        pdf_data = pdf_buffer.getvalue()
+                        
+                        st.success("PDF Generated Successfully!")
+                        
+                        # Download Button for PDF
+                        st.download_button(
+                            label="📥 Download Your Compiled PDF",
+                            data=pdf_data,
+                            file_name="Converted_Images_Report.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+            except Exception as e:
+                st.error(f"Conversion failed due to: {e}")
+
+# PLACEHOLDERS FOR FUTURE WORK 
+elif page == "msg conversion":
+    st.markdown('<p class="main-title">Message Conversion Dashboard</p>', unsafe_allow_html=True)
+    st.info("Work in progress... Yeh route message formatting aur logs conversion ke liye use hoga.")
+
+elif page == "ARS Check updation":
+    st.markdown('<p class="main-title"> ARS Check Updation</p>', unsafe_allow_html=True)
+    st.info("Work in progress... Yeh route background verification portal automation ke liye placeholder hai.")
+
+
+
 
 elif page == "About Tool":
     st.markdown('<p class="main-title">About Cleanup Automation</p>', unsafe_allow_html=True)
