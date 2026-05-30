@@ -154,15 +154,15 @@ if page == "Uber Data Upload":
                 final['Permanent_Insufficiency'] = ""
                 final['Name'] = ""
                 final['Type'] = ""
-                final['Address'] = df['Complete_Address']
+                final['Address'] = df['Address']
                 final['Pin_Code'] = df['PIN_Extracted']
                 final['Insuff'] = ""
                 final['City'] = df['DISTRICT'].fillna('NA')
                 
                 if 'City ID/District ID' in df.columns:
-                    final['flow_city_id'] = df['City ID/District ID'].apply(format_id)
+                    final['City'] = df['City ID/District ID'].apply(format_id)
                 else:
-                    final['flow_city_id'] = "NA"
+                    final['City'] = "8400"
                     
                 final['Priority'] = ""
 
@@ -172,7 +172,7 @@ if page == "Uber Data Upload":
             st.success("Process Completed Successfully! Balle Balle!")
             
             # Show live preview of processed data
-            st.subheader("Preview of Processed Output (Top 25 Rows)")
+            st.subheader("Preview of Processed Output (Top 5 Rows)")
             st.dataframe(final.head(5))
 
             # Memory string buffer setup for CSV stable download
@@ -189,7 +189,7 @@ if page == "Uber Data Upload":
             )
 
         except Exception as e:
-            st.error(f"Kuch error aaya hai setup me: {e}")
+            st.error(f"error encountered during setup: {e}")
             
     elif uber_file is not None and master_file is None:
         st.info(" Please upload the Pincode Master file to process automatic City & City ID mapping.")
