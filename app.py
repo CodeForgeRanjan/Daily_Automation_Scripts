@@ -16,8 +16,8 @@ st.markdown("""
         text-align: center;
         padding: 10px;
         background: linear-gradient(90deg, #F9D423 0%, #FF4E50 100%);
-        # -webkit-background-clip: text;
-        # -webkit-text-fill-color: transparent;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
         margin-bottom: 20px;
         border-bottom: 3px solid #FF4E50;
     }
