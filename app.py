@@ -118,8 +118,8 @@ if page == "Uber Data Upload":
                 # --- APPLY CLEANING ---
                 df['Candidate Name'] = df.iloc[:, 1].apply(clean_text_proper)
                 df['Father Name'] = df.iloc[:, 2].apply(clean_text_proper)
-                df['Complete_Address'] = df.iloc[:, 4].apply(clean_address)
-                df['PIN_Extracted'] = df['Address'].apply(extract_pin)
+                df['Cleaned_Address'] = df.iloc[:, 4].apply(clean_address)
+                df['PIN_Extracted'] = df['Cleaned_Address'].apply(extract_pin)
 
                 # Name Split logic
                 df[['First', 'Middle', 'Last']] = df['Candidate Name'].apply(lambda x: pd.Series(split_name(x)))
@@ -146,7 +146,7 @@ if page == "Uber Data Upload":
                 final['Case_Insuff'] = ""
                 final['Case_Comment'] = ""
                 final['Car_No'] = "NOT MENTIONED"
-                final['DL_No'] = "NOT MENTIONED"
+                final['DL_NO'] = "NOT MENTIONED"
                 final['Product'] = "NOT MENTIONED"
                 final['UUID'] = df.iloc[:, 0]
                 final['Special_ID'] = "FT_FORM"
@@ -154,7 +154,7 @@ if page == "Uber Data Upload":
                 final['Permanent_Insufficiency'] = ""
                 final['Name'] = ""
                 final['Type'] = ""
-                final['Complete_Address'] = df['Address']
+                final['Complete_Address'] = df['Cleaned_Address']
                 final['Pin_Code'] = df['PIN_Extracted']
                 final['Insuff'] = ""
                 final['City'] = df['DISTRICT'].fillna('NA')
