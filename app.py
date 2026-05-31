@@ -108,7 +108,7 @@ if page == "Uber Data Upload":
     st.markdown('<p class="main-title">Uber Data CleanUp Dashboard</p>', unsafe_allow_html=True)
     st.write("Upload your raw Uber CSV file and Pincode Master file to instantly generate clean data.")
 
-    # Empty State Guide (Agar file upload nahi hai toh ye dikhega)
+    # Empty State Guide 
     st.info("Welcome! Please upload both required files below to trigger the automated data cleaning pipeline.")
 
     col1, col2 = st.columns(2)
@@ -122,7 +122,7 @@ if page == "Uber Data Upload":
         uber_file = st.file_uploader("Upload Uber CSV File", type=["csv"], key="uber_file", label_visibility="collapsed")
 
     with col2:
-        st.markdown('<p class="section-header">📊 2. Pincode Master Database</p>', unsafe_allow_html=True)
+        st.markdown('<p class="section-header">Pincode Master Database</p>', unsafe_allow_html=True)
         master_file = st.file_uploader("Upload Pincode Master File", type=["xlsx", "xls"], key="master_file", label_visibility="collapsed")
         
     # with col2:
@@ -139,7 +139,7 @@ if page == "Uber Data Upload":
     #         st.rerun()
 
     if uber_file is not None and master_file is not None:
-        # Garda Update: Clear button layout with custom style
+        # Clear button layout with custom style
         st.markdown("---")
         if st.button("Reset System & Clear Cache", use_container_width=True):
             st.cache_data.clear()
@@ -216,7 +216,7 @@ if page == "Uber Data Upload":
 
             st.success("Process Completed Successfully! All Data Compiled.")
 
-            # GARDA UPDATE: Live Metric Cards
+            # Live Metric Cards
             m_col1, m_col2, m_col3 = st.columns(3)
             with m_col1:
                 st.metric(label="Total Input Records", value=f"{len(final)} rows")
@@ -227,7 +227,7 @@ if page == "Uber Data Upload":
                 st.metric(label="Fallback Swaps (8440)", value=f"{fallback_count} rows")
 
 # Show live preview of processed data
-            st.markdown('<p class="section-header">👀 Live Processed Preview (Top 5 Rows)</p>', unsafe_allow_html=True)
+            st.markdown('<p class="section-header">Live Processed Preview (Top 5 Rows)</p>', unsafe_allow_html=True)
             st.dataframe(final.head(5), use_container_width=True)
     
             # # Show live preview of processed data
