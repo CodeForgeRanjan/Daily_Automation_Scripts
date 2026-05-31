@@ -207,57 +207,106 @@ if page == "Uber Data Upload":
         st.info(" Please upload the Pincode Master file to process automatic City & City ID mapping.")
 
 # ================= PAGE 2: IMAGE & DOCS CONVERTED =================
+# ================= PAGE 2: IMAGE & DOCS CONVERTED (ZIP + AUTO-ROTATE ENABLED) =================
 elif page == "Image Converted":
-    st.markdown('<p class="main-title">PDF Converter Hub </p>', unsafe_allow_html=True)
-    st.write("Convert single images, merge multiple images, or transform Word files (.docx) into professional PDFs.")
+    import zipfile  # Zip folder banane ke liye inbuilt module
+    from PIL import ImageOps  # Image ko automatic seedha karne ke liye
+    
+    st.markdown('<p class="main-title">📄 Document & Image to PDF Converter Hub</p>', unsafe_allow_html=True)
+    st.write("Convert single images with auto-rotation, merge multiple images, or bulk-transform Word files into PDFs with a single 'Download All' Zip option.")
 
-    # Three different core types to process other tasks
-    tab1, tab2, tab3 = st.tabs(["Single Image to PDF", "Bulk Merge to One PDF", "Word Docs to PDF"])
+    tab1, tab2, tab3 = st.tabs(["📸 Single Image to PDF", "📚 Bulk Merge to One PDF", "📝 Word Docs to PDF"])
 
-    # ----------------- TAB 1: SINGLE IMAGE TO SINGLE PDF -----------------
+    # ----------------- TAB 1: SINGLE IMAGE TO SINGLE PDF (WITH ZIP & AUTO-ROTATE) -----------------
     with tab1:
         st.subheader("Convert Individual Images to Separate PDFs")
-        single_images = st.file_uploader("Upload Images (Each file will be created as a separate PDF.)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="single_key")
+        single_images = st.file_uploader("Upload Images (Individual Conversion)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="single_key")
         
         if single_images:
-            st.info(f"Total {len(single_images)} images uploaded.")
-            for idx, uploaded_img in enumerate(single_images):
+            st.info(f"Total {len(single_images)} image(s) uploaded.")
+            
+            # Agar sirf 1 image hai toh normal download button dikhao
+            if len(single_images) == 1:
                 try:
-                    # BytesIO will handle corrupted file crashes
+                    uploaded_img = single_images[0]
                     img_data = io.BytesIO(uploaded_img.read())
                     img = Image.open(img_data)
+                    
+                    # FIX 1: Auto-Orientation (Ulti image ko automatic seedha karega)
+                    img = ImageOps.exif_transpose(img)
                     img = img.convert('RGB')
+                    
+                    # FIX 2: Resolution correction to Standard A4 Layout (Vertical / Portrait)
+                    img.thumbnail((1240, 1754), Image.Resampling.LANCZOS)
                     
                     pdf_buffer = io.BytesIO()
                     img.save(pdf_buffer, format="PDF")
                     pdf_bytes = pdf_buffer.getvalue()
                     
-                    # Each file has its own download button    
                     st.download_button(
-                        label=f"Download PDF: {uploaded_img.name}.pdf",
+                        label=f"📥 Download PDF: {uploaded_img.name}.pdf",
                         data=pdf_bytes,
                         file_name=f"{uploaded_img.name.split('.')[0]}.pdf",
                         mime="application/pdf",
-                        key=f"btn_single_{idx}"
+                        use_container_width=True
                     )
                 except Exception as e:
-                    st.error(f"File {uploaded_img.name} convert nahi ho payi: {e}")
+                    st.error(f"Error: {e}")
+                    
+            # Agar 1 se zyada images hain toh "Download All" Zip Button dikhao
+            else:
+                if st.button("⚙️ Process All Images & Create Zip", key="process_img_zip"):
+                    try:
+                        with st.spinner("Fixing resolution, orientation and creating Zip..."):
+                            zip_buffer = io.BytesIO()
+                            
+                            # Memory mein zip folder banana
+                            with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                                for idx, uploaded_img in enumerate(single_images):
+                                    img_data = io.BytesIO(uploaded_img.read())
+                                    img = Image.open(img_data)
+                                    
+                                    # Auto-rotate fix for flipped dimensions (E.g. 1166x1600 rotation)
+                                    img = ImageOps.exif_transpose(img)
+                                    img = img.convert('RGB')
+                                    img.thumbnail((1240, 1754), Image.Resampling.LANCZOS)
+                                    
+                                    pdf_buffer = io.BytesIO()
+                                    img.save(pdf_buffer, format="PDF")
+                                    
+                                    # Zip ke andar file daalna
+                                    clean_name = f"{uploaded_img.name.split('.')[0]}.pdf"
+                                    zip_file.writestr(clean_name, pdf_buffer.getvalue())
+                                    
+                            st.success("🎉 All Images Converted successfully!")
+                            st.download_button(
+                                label="📥 Download All PDFs in One Click (ZIP)",
+                                data=zip_buffer.getvalue(),
+                                file_name="All_Images_PDFs.zip",
+                                mime="application/zip",
+                                use_container_width=True
+                            )
+                    except Exception as e:
+                        st.error(f"Zip Creation Failed: {e}")
 
     # ----------------- TAB 2: MULTIPLE IMAGES TO ONE MERGE PDF -----------------
     with tab2:
         st.subheader("Compile Multiple Images into a Single Candidate PDF Report")
-        bulk_images = st.file_uploader("Upload Multiple Images (All are merged into single pdf)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="bulk_key")
+        bulk_images = st.file_uploader("Upload Multiple Images (Saare ek hi PDF mein merge honge)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="bulk_key")
         
         if bulk_images:
             st.success(f"Total {len(bulk_images)} images uploaded for merging.")
             if st.button("⚙️ Merge All Images into 1 PDF", key="merge_btn"):
                 try:
-                    with st.spinner("Compiling all images..."):
+                    with st.spinner("Compiling all images with auto-rotation check..."):
                         img_list = []
                         for uploaded_img in bulk_images:
                             img_data = io.BytesIO(uploaded_img.read())
                             img = Image.open(img_data)
+                            # Rotation and resolution check for merge list
+                            img = ImageOps.exif_transpose(img)
                             img = img.convert('RGB')
+                            img.thumbnail((1240, 1754), Image.Resampling.LANCZOS)
                             img_list.append(img)
                         
                         if img_list:
@@ -265,20 +314,20 @@ elif page == "Image Converted":
                             img_list[0].save(pdf_buffer, format="PDF", save_all=True, append_images=img_list[1:])
                             pdf_data = pdf_buffer.getvalue()
                             
-                            st.success("Multi-page Candidate PDF Compiled!")
+                            st.success("🎉 Multi-page Candidate PDF Compiled!")
                             st.download_button(
-                                label="Download Compiled Candidate PDF",
+                                label="📥 Download Compiled Candidate PDF",
                                 data=pdf_data,
                                 file_name="Candidate_Merged_Report.pdf",
                                 mime="application/pdf",
                                 use_container_width=True
                             )
                 except Exception as e:
-                    st.error(f"Merge failed: {e}. Return a corrupted image file.")
+                    st.error(f"Merge failed: {e}")
 
-    # ----------------- TAB 3: WORD DOCS TO PDF (CLOUD FRIENDLY) -----------------
+    # ----------------- TAB 3: WORD DOCS TO PDF (WITH ZIP FUNCTIONALITY) -----------------
     with tab3:
-        st.subheader("Direct Word Document (.docx) to PDF Converter")
+        st.subheader("Direct Word Document (.docx) to PDF Bulk Converter")
         word_files = st.file_uploader("Upload Word Documents (.docx)", type=["docx"], accept_multiple_files=True, key="word_key")
         
         if word_files:
@@ -289,42 +338,66 @@ elif page == "Image Converted":
             
             st.info(f"Total {len(word_files)} Word document(s) uploaded.")
             
-            for idx, doc_file in enumerate(word_files):
-                if st.button(f"Convert {doc_file.name} to PDF", key=f"word_btn_{idx}"):
+            # Case A: Agar sirf 1 Word Document hai
+            if len(word_files) == 1:
+                doc_file = word_files[0]
+                if st.button(f"📄 Convert & Download {doc_file.name}", key="single_word_btn", use_container_width=True):
                     try:
-                        with st.spinner("Converting Document..."):
-                            # Read DOCX text
-                            doc = Document(doc_file)
-                            pdf_buffer = io.BytesIO()
+                        doc = Document(doc_file)
+                        pdf_buffer = io.BytesIO()
+                        doc_template = SimpleDocTemplate(pdf_buffer, pagesize=letter)
+                        styles = getSampleStyleSheet()
+                        story = []
+                        for para in doc.paragraphs:
+                            if para.text.strip():
+                                story.append(Paragraph(para.text, styles['Normal']))
+                                story.append(Spacer(1, 10))
+                        doc_template.build(story)
+                        
+                        st.success("🎉 Converted successfully!")
+                        st.download_button(
+                            label="📥 Download PDF",
+                            data=pdf_buffer.getvalue(),
+                            file_name=f"{doc_file.name.split('.')[0]}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+                    except Exception as e:
+                        st.error(f"Failed: {e}")
+            
+            # Case B: Agar multiple Word Documents hain toh single button se Zip banao
+            else:
+                if st.button("⚙️ Convert All Docs & Create Zip", key="bulk_word_zip_btn", use_container_width=True):
+                    try:
+                        with st.spinner("Converting all docx files into bulk zip folder..."):
+                            zip_buffer = io.BytesIO()
                             
-                            # ReportLab Setup to build PDF dynamically on Cloud
-                            doc_template = SimpleDocTemplate(pdf_buffer, pagesize=letter)
-                            styles = getSampleStyleSheet()
-                            story = []
-                            
-                            for para in doc.paragraphs:
-                                if para.text.strip():
-                                    # Normal clean body text conversion
-                                    p = Paragraph(para.text, styles['Normal'])
-                                    story.append(p)
-                                    story.append(Spacer(1, 10))
-                            
-                            if not story:
-                                story.append(Paragraph("Empty Document Text", styles['Normal']))
-                                
-                            doc_template.build(story)
-                            pdf_bytes = pdf_buffer.getvalue()
-                            
-                            st.success(f"{doc_file.name} converted successfully!")
+                            with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                                for idx, doc_file in enumerate(word_files):
+                                    doc = Document(doc_file)
+                                    pdf_buffer = io.BytesIO()
+                                    doc_template = SimpleDocTemplate(pdf_buffer, pagesize=letter)
+                                    styles = getSampleStyleSheet()
+                                    story = []
+                                    for para in doc.paragraphs:
+                                        if para.text.strip():
+                                            story.append(Paragraph(para.text, styles['Normal']))
+                                            story.append(Spacer(1, 10))
+                                    doc_template.build(story)
+                                    
+                                    clean_name = f"{doc_file.name.split('.')[0]}.pdf"
+                                    zip_file.writestr(clean_name, pdf_buffer.getvalue())
+                                    
+                            st.success("🎉 All Word Docs converted to PDFs successfully!")
                             st.download_button(
-                                label=f"Download PDF from {doc_file.name}",
-                                data=pdf_bytes,
-                                file_name=f"{doc_file.name.split('.')[0]}.pdf",
-                                mime="application/pdf"
+                                label="📥 Download All Word PDFs (ZIP)",
+                                data=zip_buffer.getvalue(),
+                                file_name="All_Word_PDFs.zip",
+                                mime="application/zip",
+                                use_container_width=True
                             )
                     except Exception as e:
-                        st.error(f"Docx conversion failed: {e}")
-                        
+                        st.error(f"Bulk conversion failed: {e}")                        
 # PLACEHOLDERS FOR FUTURE WORK 
 elif page == "msg conversion":
     st.markdown('<p class="main-title">Message Conversion Dashboard</p>', unsafe_allow_html=True)
