@@ -174,8 +174,7 @@ if page == "Uber Data Upload":
 
                 final['Priority'] = ""
 
-                # Missing City & Pin Fallback 
-                # IF City == 'NA' and Pin_Code is blank, then set City '8440'
+                #  Pin Code Fallback 
                 missing_mask = (final['City'] == 'NA') & ((final['Pin_Code'] == '') | (final['Pin_Code'].isna()))
                 final.loc[missing_mask, 'City'] = '8440'
 
@@ -188,12 +187,12 @@ if page == "Uber Data Upload":
             st.subheader("Preview of Processed Output (Top 5 Rows)")
             st.dataframe(final.head(5))
 
-            # Memory string buffer setup for CSV stable download
+            # setup for CSV stable download
             csv_buffer = io.StringIO()
             final.to_csv(csv_buffer, index=False)
             csv_output = csv_buffer.getvalue()
             
-            # Stable Download Button for CSV Output
+            # Stable Download 
             st.download_button(
                 label=" Download Processed CSV File",
                 data=csv_output,
@@ -207,25 +206,24 @@ if page == "Uber Data Upload":
     elif uber_file is not None and master_file is None:
         st.info(" Please upload the Pincode Master file to process automatic City & City ID mapping.")
 
-# ================= IMAGE CONVERTED (IMAGE TO PDF) =================
 # ================= PAGE 2: IMAGE & DOCS CONVERTED =================
 elif page == "Image Converted":
-    st.markdown('<p class="main-title">📄 Document & Image to PDF Converter Hub</p>', unsafe_allow_html=True)
+    st.markdown('<p class="main-title">PDF Converter Hub </p>', unsafe_allow_html=True)
     st.write("Convert single images, merge multiple images, or transform Word files (.docx) into professional PDFs.")
 
-    # 3 Tabs banaye hain taaki saara kaam alag aur saaf ho
-    tab1, tab2, tab3 = st.tabs(["📸 Single Image to PDF", "📚 Bulk Merge to One PDF", "📝 Word Docs to PDF"])
+    # Three different core types to process other tasks
+    tab1, tab2, tab3 = st.tabs(["Single Image to PDF", "Bulk Merge to One PDF", "Word Docs to PDF"])
 
     # ----------------- TAB 1: SINGLE IMAGE TO SINGLE PDF -----------------
     with tab1:
         st.subheader("Convert Individual Images to Separate PDFs")
-        single_images = st.file_uploader("Upload Images (Har file ka alag PDF banega)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="single_key")
+        single_images = st.file_uploader("Upload Images (Each file will be created as a separate PDF.)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="single_key")
         
         if single_images:
             st.info(f"Total {len(single_images)} images uploaded.")
             for idx, uploaded_img in enumerate(single_images):
                 try:
-                    # BytesIO se corrupt file crash handle hoga
+                    # BytesIO will handle corrupted file crashes
                     img_data = io.BytesIO(uploaded_img.read())
                     img = Image.open(img_data)
                     img = img.convert('RGB')
@@ -234,9 +232,9 @@ elif page == "Image Converted":
                     img.save(pdf_buffer, format="PDF")
                     pdf_bytes = pdf_buffer.getvalue()
                     
-                    # Har file ke aage uska apna download button
+                    # Each file has its own download button    
                     st.download_button(
-                        label=f"📥 Download PDF: {uploaded_img.name}.pdf",
+                        label=f"Download PDF: {uploaded_img.name}.pdf",
                         data=pdf_bytes,
                         file_name=f"{uploaded_img.name.split('.')[0]}.pdf",
                         mime="application/pdf",
@@ -248,7 +246,7 @@ elif page == "Image Converted":
     # ----------------- TAB 2: MULTIPLE IMAGES TO ONE MERGE PDF -----------------
     with tab2:
         st.subheader("Compile Multiple Images into a Single Candidate PDF Report")
-        bulk_images = st.file_uploader("Upload Multiple Images (Saare ek hi PDF mein merge honge)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="bulk_key")
+        bulk_images = st.file_uploader("Upload Multiple Images (All are merged into single pdf)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="bulk_key")
         
         if bulk_images:
             st.success(f"Total {len(bulk_images)} images uploaded for merging.")
@@ -267,16 +265,16 @@ elif page == "Image Converted":
                             img_list[0].save(pdf_buffer, format="PDF", save_all=True, append_images=img_list[1:])
                             pdf_data = pdf_buffer.getvalue()
                             
-                            st.success("🎉 Multi-page Candidate PDF Compiled!")
+                            st.success("Multi-page Candidate PDF Compiled!")
                             st.download_button(
-                                label="📥 Download Compiled Candidate PDF",
+                                label="Download Compiled Candidate PDF",
                                 data=pdf_data,
                                 file_name="Candidate_Merged_Report.pdf",
                                 mime="application/pdf",
                                 use_container_width=True
                             )
                 except Exception as e:
-                    st.error(f"Merge failed: {e}. Kisi image file mein corrupt data hai.")
+                    st.error(f"Merge failed: {e}. Return a corrupted image file.")
 
     # ----------------- TAB 3: WORD DOCS TO PDF (CLOUD FRIENDLY) -----------------
     with tab3:
@@ -292,7 +290,7 @@ elif page == "Image Converted":
             st.info(f"Total {len(word_files)} Word document(s) uploaded.")
             
             for idx, doc_file in enumerate(word_files):
-                if st.button(f"📄 Convert {doc_file.name} to PDF", key=f"word_btn_{idx}"):
+                if st.button(f"Convert {doc_file.name} to PDF", key=f"word_btn_{idx}"):
                     try:
                         with st.spinner("Converting Document..."):
                             # Read DOCX text
@@ -317,15 +315,16 @@ elif page == "Image Converted":
                             doc_template.build(story)
                             pdf_bytes = pdf_buffer.getvalue()
                             
-                            st.success(f"🎉 {doc_file.name} converted successfully!")
+                            st.success(f"{doc_file.name} converted successfully!")
                             st.download_button(
-                                label=f"📥 Download PDF from {doc_file.name}",
+                                label=f"Download PDF from {doc_file.name}",
                                 data=pdf_bytes,
                                 file_name=f"{doc_file.name.split('.')[0]}.pdf",
                                 mime="application/pdf"
                             )
                     except Exception as e:
                         st.error(f"Docx conversion failed: {e}")
+                        
 # PLACEHOLDERS FOR FUTURE WORK 
 elif page == "msg conversion":
     st.markdown('<p class="main-title">Message Conversion Dashboard</p>', unsafe_allow_html=True)
