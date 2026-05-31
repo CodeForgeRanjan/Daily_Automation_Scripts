@@ -208,64 +208,124 @@ if page == "Uber Data Upload":
         st.info(" Please upload the Pincode Master file to process automatic City & City ID mapping.")
 
 # ================= IMAGE CONVERTED (IMAGE TO PDF) =================
+# ================= PAGE 2: IMAGE & DOCS CONVERTED =================
 elif page == "Image Converted":
-    st.markdown('<p class="main-title"> Image to PDF Converter</p>', unsafe_allow_html=True)
-    st.write("Upload one or multiple images (PNG, JPG, JPEG) to convert them into a single compiled PDF file.")
+    st.markdown('<p class="main-title">📄 Document & Image to PDF Converter Hub</p>', unsafe_allow_html=True)
+    st.write("Convert single images, merge multiple images, or transform Word files (.docx) into professional PDFs.")
 
-    # Multi-file uploader for images
-    uploaded_images = st.file_uploader(
-        "Upload Images", 
-        type=["png", "jpg", "jpeg"], 
-        accept_multiple_files=True, 
-        key="pdf_uploader"
-    )
+    # 3 Tabs banaye hain taaki saara kaam alag aur saaf ho
+    tab1, tab2, tab3 = st.tabs(["📸 Single Image to PDF", "📚 Bulk Merge to One PDF", "📝 Word Docs to PDF"])
 
-    if uploaded_images:
-        st.success(f"Total {len(uploaded_images)} images uploaded.")
+    # ----------------- TAB 1: SINGLE IMAGE TO SINGLE PDF -----------------
+    with tab1:
+        st.subheader("Convert Individual Images to Separate PDFs")
+        single_images = st.file_uploader("Upload Images (Har file ka alag PDF banega)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="single_key")
         
-        # Save the first image as a PDF with all the other images combined
-        if st.button("Convert Images to PDF"):
-            try:
-                with st.spinner("Converting images... Please wait..."):
-                    img_list = []
+        if single_images:
+            st.info(f"Total {len(single_images)} images uploaded.")
+            for idx, uploaded_img in enumerate(single_images):
+                try:
+                    # BytesIO se corrupt file crash handle hoga
+                    img_data = io.BytesIO(uploaded_img.read())
+                    img = Image.open(img_data)
+                    img = img.convert('RGB')
                     
-                    for uploaded_img in uploaded_images:
-                        # Image open from pillow
-                        img = Image.open(uploaded_img)
-                        # If image RGBA format then (transparent PNG), use RGB then convert to PDF 
-                        if img.mode in ('RGBA', 'LA', 'P'):
-                            img = img.convert('RGB')
-                        else:
-                            img = img.convert('RGB')
-                        img_list.append(img)
+                    pdf_buffer = io.BytesIO()
+                    img.save(pdf_buffer, format="PDF")
+                    pdf_bytes = pdf_buffer.getvalue()
                     
-                    if img_list:
-                        # Memory buffer setup PDF 
-                        pdf_buffer = io.BytesIO()
-                        
-                        # Save as PDF by appending the first image to all the other images
-                        first_img = img_list[0]
-                        first_img.save(
-                            pdf_buffer,
-                            format="PDF",
-                            save_all=True,
-                            append_images=img_list[1:]
-                        )
-                        pdf_data = pdf_buffer.getvalue()
-                        
-                        st.success("PDF Generated Successfully!")
-                        
-                        # Download Button for PDF
-                        st.download_button(
-                            label="Download Your Compiled PDF",
-                            data=pdf_data,
-                            file_name="Converted_Images_Report.pdf",
-                            mime="application/pdf",
-                            use_container_width=True
-                        )
-            except Exception as e:
-                st.error(f"Conversion failed due to: {e}")
+                    # Har file ke aage uska apna download button
+                    st.download_button(
+                        label=f"📥 Download PDF: {uploaded_img.name}.pdf",
+                        data=pdf_bytes,
+                        file_name=f"{uploaded_img.name.split('.')[0]}.pdf",
+                        mime="application/pdf",
+                        key=f"btn_single_{idx}"
+                    )
+                except Exception as e:
+                    st.error(f"File {uploaded_img.name} convert nahi ho payi: {e}")
 
+    # ----------------- TAB 2: MULTIPLE IMAGES TO ONE MERGE PDF -----------------
+    with tab2:
+        st.subheader("Compile Multiple Images into a Single Candidate PDF Report")
+        bulk_images = st.file_uploader("Upload Multiple Images (Saare ek hi PDF mein merge honge)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="bulk_key")
+        
+        if bulk_images:
+            st.success(f"Total {len(bulk_images)} images uploaded for merging.")
+            if st.button("⚙️ Merge All Images into 1 PDF", key="merge_btn"):
+                try:
+                    with st.spinner("Compiling all images..."):
+                        img_list = []
+                        for uploaded_img in bulk_images:
+                            img_data = io.BytesIO(uploaded_img.read())
+                            img = Image.open(img_data)
+                            img = img.convert('RGB')
+                            img_list.append(img)
+                        
+                        if img_list:
+                            pdf_buffer = io.BytesIO()
+                            img_list[0].save(pdf_buffer, format="PDF", save_all=True, append_images=img_list[1:])
+                            pdf_data = pdf_buffer.getvalue()
+                            
+                            st.success("🎉 Multi-page Candidate PDF Compiled!")
+                            st.download_button(
+                                label="📥 Download Compiled Candidate PDF",
+                                data=pdf_data,
+                                file_name="Candidate_Merged_Report.pdf",
+                                mime="application/pdf",
+                                use_container_width=True
+                            )
+                except Exception as e:
+                    st.error(f"Merge failed: {e}. Kisi image file mein corrupt data hai.")
+
+    # ----------------- TAB 3: WORD DOCS TO PDF (CLOUD FRIENDLY) -----------------
+    with tab3:
+        st.subheader("Direct Word Document (.docx) to PDF Converter")
+        word_files = st.file_uploader("Upload Word Documents (.docx)", type=["docx"], accept_multiple_files=True, key="word_key")
+        
+        if word_files:
+            from docx import Document
+            from reportlab.lib.pagesizes import letter
+            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+            from reportlab.lib.styles import getSampleStyleSheet
+            
+            st.info(f"Total {len(word_files)} Word document(s) uploaded.")
+            
+            for idx, doc_file in enumerate(word_files):
+                if st.button(f"📄 Convert {doc_file.name} to PDF", key=f"word_btn_{idx}"):
+                    try:
+                        with st.spinner("Converting Document..."):
+                            # Read DOCX text
+                            doc = Document(doc_file)
+                            pdf_buffer = io.BytesIO()
+                            
+                            # ReportLab Setup to build PDF dynamically on Cloud
+                            doc_template = SimpleDocTemplate(pdf_buffer, pagesize=letter)
+                            styles = getSampleStyleSheet()
+                            story = []
+                            
+                            for para in doc.paragraphs:
+                                if para.text.strip():
+                                    # Normal clean body text conversion
+                                    p = Paragraph(para.text, styles['Normal'])
+                                    story.append(p)
+                                    story.append(Spacer(1, 10))
+                            
+                            if not story:
+                                story.append(Paragraph("Empty Document Text", styles['Normal']))
+                                
+                            doc_template.build(story)
+                            pdf_bytes = pdf_buffer.getvalue()
+                            
+                            st.success(f"🎉 {doc_file.name} converted successfully!")
+                            st.download_button(
+                                label=f"📥 Download PDF from {doc_file.name}",
+                                data=pdf_bytes,
+                                file_name=f"{doc_file.name.split('.')[0]}.pdf",
+                                mime="application/pdf"
+                            )
+                    except Exception as e:
+                        st.error(f"Docx conversion failed: {e}")
 # PLACEHOLDERS FOR FUTURE WORK 
 elif page == "msg conversion":
     st.markdown('<p class="main-title">Message Conversion Dashboard</p>', unsafe_allow_html=True)
