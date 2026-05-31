@@ -208,7 +208,7 @@ if page == "Uber Data Upload":
 
 # ================= IMAGE & DOCS CONVERTED  =================
 # ================= PAGE 2: IMAGE & DOCS CONVERTED (ZIP + AUTO-ROTATE ENABLED) =================
-elif page == "Image Converted":
+elif page == "Image And Docs Converted":
     import zipfile  # Zip folder banane ke liye inbuilt module
     from PIL import ImageOps  # Image ko automatic seedha karne ke liye
     
