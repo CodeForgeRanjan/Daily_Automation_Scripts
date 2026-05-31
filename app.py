@@ -432,8 +432,12 @@ elif page == "About Tool":
 
     #### 2.  Image to PDF Converter
     - **Multi-File Batch Processing:** Upload multiple formats (`.png`, `.jpg`, `.jpeg`) concurrently.
-    - **Single-File Compilation:** Automatically flattens and groups separate document scans into a single, clean, and chronologically compiled PDF report.
     - **RGBA Transparency Fix:** Built-in Pillow conversion handles alpha-channels and transparent images seamlessly to prevent engine crashes.
+    - **Smart Auto-Orientation (EXIF Fix): Automatically detects if an uploaded image or document scan is flipped upside down or sideways (e.g., vertical camera angles or rotated dimensions like 1166x1600) and auto-rotates it back to a perfectly readable, upright position.
+    - **Standardized A4 Resolution Scaling: Resizes and fits skewed or distorted image sizes to a clean, uniform A4 aspect ratio layout using advanced LANCZOS resampling to prevent stretched text
+    - **Dynamic Dual-Mode Outputs: Intelligent routing that gives a direct single PDF if only 1 document is uploaded, but opens up an automated bulk architecture if multiple items are processing.
+    - **One-Click Bulk ZIP Archiving: Eliminates the frustration of downloading 30 different files individually. Processes all single document conversions in parallel background memory and compiles them into a single downloadable .zip package instantly.
+    - **- Integrated Word Docs (.docx) Engine: Built-in hybrid parser using python-docxandReportLab to extract semantic text data from editable client docs and compile them directly into static PDFs directly on the cloud environment.
 
     #### 3.  Future Pipeline Modules
     - **msg conversion & ARS Check updation:** Dedicated pipelines currently reserved as placeholders for downstream integration of communication logs and portals mapping.
