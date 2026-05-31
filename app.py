@@ -113,13 +113,23 @@ if page == "Uber Data Upload":
 
     col1, col2 = st.columns(2)
     
+    # with col1:
+    #     st.subheader("1. Uber Raw Data")
+    #     uber_file = st.file_uploader("Upload Uber CSV File", type=["csv"], key="uber_file")
+
     with col1:
-        st.subheader("1. Uber Raw Data")
-        uber_file = st.file_uploader("Upload Uber CSV File", type=["csv"], key="uber_file")
-        
+        st.markdown('<p class="section-header">Uber Raw Data Input</p>', unsafe_allow_html=True)
+        uber_file = st.file_uploader("Upload Uber CSV File", type=["csv"], key="uber_file", label_visibility="collapsed")
+
     with col2:
-        st.subheader("2. Pincode Master Data")
-        master_file = st.file_uploader("Upload Pincode Master File", type=["xlsx", "xls"], key="master_file")
+        st.markdown('<p class="section-header">📊 2. Pincode Master Database</p>', unsafe_allow_html=True)
+        master_file = st.file_uploader("Upload Pincode Master File", type=["xlsx", "xls"], key="master_file", label_visibility="collapsed")
+        
+    # with col2:
+    #     st.subheader("2. Pincode Master Data")
+    #     master_file = st.file_uploader("Upload Pincode Master File", type=["xlsx", "xls"], key="master_file")
+
+    
 
     # --- CLEAR BUTTON  ---
     # if uber_file is not None or master_file is not None:
@@ -193,7 +203,12 @@ if page == "Uber Data Upload":
                 final['Priority'] = ""
 
                 #  Pin Code Fallback 
+                # missing_mask = (final['City'] == 'NA') & ((final['Pin_Code'] == '') | (final['Pin_Code'].isna()))
+                # final.loc[missing_mask, 'City'] = '8440'
+
+                # Pin Code Fallback Logic
                 missing_mask = (final['City'] == 'NA') & ((final['Pin_Code'] == '') | (final['Pin_Code'].isna()))
+                fallback_count = missing_mask.sum()
                 final.loc[missing_mask, 'City'] = '8440'
 
                 # Remove illegal characters from final structure
