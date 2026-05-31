@@ -399,11 +399,11 @@ elif page == "Image Converted":
                     except Exception as e:
                         st.error(f"Bulk conversion failed: {e}")                        
 # PLACEHOLDERS FOR FUTURE WORK 
-elif page == "msg conversion":
+elif page == "MSG Conversion":
     st.markdown('<p class="main-title">Message Conversion Dashboard</p>', unsafe_allow_html=True)
     st.info("Work in progress...This route will be used for message formatting and log conversion.")
 
-elif page == "ARS Check updation":
+elif page == "ARS Check Updation":
     st.markdown('<p class="main-title"> ARS Check Updation</p>', unsafe_allow_html=True)
     st.info("Work in progress... This route is a placeholder for the background verification portal automation.")
 
