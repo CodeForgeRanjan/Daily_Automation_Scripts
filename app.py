@@ -268,8 +268,11 @@ elif page == "Image And Docs Converted":
         st.subheader("Convert Individual Images to Separate PDFs")
         single_images = st.file_uploader("Upload Images (Individual Conversion)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="single_key")
         
+        # if single_images:
+        #     st.info(f"Total {len(single_images)} image(s) uploaded.")
+
         if single_images:
-            st.info(f"Total {len(single_images)} image(s) uploaded.")
+            st.success(f"Total {len(single_images)} image(s) uploaded successfully.")
             
             # If there is only 1 image then show normal download button
             if len(single_images) == 1:
