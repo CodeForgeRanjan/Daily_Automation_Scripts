@@ -11,7 +11,7 @@ st.set_page_config(page_title="Multi-Utility Automation Tool", page_icon="🚗",
 st.markdown("""
     <style>
     .main-title {
-        font-size: 36px;
+        font-size: 40px;
         font-weight: bold;
         color: #111111;
         text-align: center;
@@ -21,12 +21,21 @@ st.markdown("""
         -webkit-text-fill-color: transparent;
         margin-bottom: 20px;
         border-bottom: 3px solid #FF4E50;
+        border-radius: 5px;
     }
     .sidebar-heading {
-        font-size: 38px;
+        font-size: 24px;
         font-weight: bold;
         color: #00ffff;
-        margin-bottom: 15px;
+        margin-bottom: 20px;
+        text-shadow: 0px 0px 10px rgba(0,255,255,0.5);
+    }
+    .section-header{
+        font-size: 20px;
+        font-weight: 600;
+        color: #F9D423;
+        margin-top: 15px;
+        margin-bottom: 10px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -94,9 +103,13 @@ def remove_illegal_chars(val):
 st.sidebar.markdown('<p class="sidebar-heading">🚗 Navigation Menu</p>', unsafe_allow_html=True)
 page = st.sidebar.radio("Go to:", ["Uber Data Upload", "Image And Docs Converted", "MSG Conversion", "ARS Check Updation" ,"About Tool"])
 
+
 if page == "Uber Data Upload":
     st.markdown('<p class="main-title">Uber Data CleanUp Dashboard</p>', unsafe_allow_html=True)
     st.write("Upload your raw Uber CSV file and Pincode Master file to instantly generate clean data.")
+
+    # Empty State Guide (Agar file upload nahi hai toh ye dikhega)
+    st.info("Welcome! Please upload both required files below to trigger the automated data cleaning pipeline.")
 
     col1, col2 = st.columns(2)
     
@@ -116,6 +129,11 @@ if page == "Uber Data Upload":
     #         st.rerun()
 
     if uber_file is not None and master_file is not None:
+        # Garda Update: Clear button layout with custom style
+        st.markdown("---")
+        if st.button("Reset System & Clear Cache", use_container_width=True):
+            st.cache_data.clear()
+            st.rerun()
         try:
             with st.spinner("Processing your data... Please wait..."):
                 # Load Files
@@ -181,11 +199,25 @@ if page == "Uber Data Upload":
                 # Remove illegal characters from final structure
                 final = final.map(remove_illegal_chars)
 
-            st.success("Process Completed Successfully!")
-            
-            # Show live preview of processed data
-            st.subheader("Preview of Processed Output (Top 5 Rows)")
-            st.dataframe(final.head(5))
+            st.success("Process Completed Successfully! All Data Compiled.")
+
+            # GARDA UPDATE: Live Metric Cards
+            m_col1, m_col2, m_col3 = st.columns(3)
+            with m_col1:
+                st.metric(label="Total Input Records", value=f"{len(final)} rows")
+            with m_col2:
+                mapped_pins = final['Pin_Code'].transform(lambda x: 1 if x != '' else 0).sum()
+                st.metric(label="Extracted Pincodes", value=f"{mapped_pins} items")
+            with m_col3:
+                st.metric(label="Fallback Swaps (8440)", value=f"{fallback_count} rows")
+
+# Show live preview of processed data
+            st.markdown('<p class="section-header">👀 Live Processed Preview (Top 5 Rows)</p>', unsafe_allow_html=True)
+            st.dataframe(final.head(5), use_container_width=True)
+    
+            # # Show live preview of processed data
+            # st.subheader("Preview of Processed Output (Top 5 Rows)")
+            # st.dataframe(final.head(5))
 
             # setup for CSV stable download
             csv_buffer = io.StringIO()
