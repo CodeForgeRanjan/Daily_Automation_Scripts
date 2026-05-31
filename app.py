@@ -430,15 +430,15 @@ elif page == "About Tool":
     - **Automated Pincode VLOOKUP:** Performs an optimized memory merge against your Master Pincode file to auto-populate City names and Flow City IDs.
     - **Smart Fallback Engine:** Automatically detects rows where both Pincode is missing and City is mapped as 'NA', over-writing them with the system fallback code **`8440`**.
 
-    #### 2.  Image to PDF Converter
-    - **Multi-File Batch Processing:** Upload multiple formats (`.png`, `.jpg`, `.jpeg`) concurrently.
-    - **RGBA Transparency Fix:** Built-in Pillow conversion handles alpha-channels and transparent images seamlessly to prevent engine crashes.
-    - Smart Auto-Orientation (EXIF Fix): Automatically detects if an uploaded image or document scan is flipped upside down or sideways (e.g., vertical camera angles or rotated dimensions like 1166x1600) and auto-rotates it back to a perfectly readable, upright position.
-    - Standardized A4 Resolution Scaling: Resizes and fits skewed or distorted image sizes to a clean, uniform A4 aspect ratio layout using advanced LANCZOS resampling to prevent stretched text
-    - **Dynamic Dual-Mode Outputs: Intelligent routing that gives a direct single PDF if only 1 document is uploaded, but opens up an automated bulk architecture if multiple items are processing.
-    - **One-Click Bulk ZIP Archiving: Eliminates the frustration of downloading 30 different files individually. Processes all single document conversions in parallel background memory and compiles them into a single downloadable .zip package instantly.
-    - **- Integrated Word Docs (.docx) Engine: Built-in hybrid parser using python-docxandReportLab to extract semantic text data from editable client docs and compile them directly into static PDFs directly on the cloud environment.
+    #### 2. Image And Docs Converted Hub
+    - **Multi-File Batch Processing:** Upload multiple formats (`.png`, `.jpg`, `.jpeg`, `.docx`) concurrently.
+    - **Smart Auto-Orientation (EXIF Fix):** Automatically detects if an uploaded document scan is flipped upside down or sideways (e.g., rotated dimensions like 1166x1600) and auto-rotates it back to an upright portrait position.
+    - **Standardized A4 Resolution Scaling:** Resizes skewed image sizes to a clean, uniform A4 layout using advanced LANCZOS resampling to prevent text stretching.
+    - **Bulk Merge to One PDF:** Flattens and groups multiple images into a single multi-page compiled PDF report for a candidate.
+    - **One-Click Bulk ZIP Archiving:** Processes bulk standalone conversions in background memory and packs them into a single downloadable `.zip` file, saving manual click time.
+    - **Cloud-Friendly Word Docs to PDF Converter:** Uses a hybrid parsing engine (`python-docx` & `ReportLab`) to dynamically read Word files and render them as high-quality PDFs on the fly without needing external system tools.
 
-    #### 3.  Future Pipeline Modules
-    - **msg conversion & ARS Check updation:** Dedicated pipelines currently reserved as placeholders for downstream integration of communication logs and portals mapping.
+    #### 3. Future Pipeline Modules
+    - **MSG Conversion & ARS Check Updation:** Dedicated pipelines currently reserved as placeholders for downstream integration of communication logs and automated portal verification mappings.
     """)
+    
