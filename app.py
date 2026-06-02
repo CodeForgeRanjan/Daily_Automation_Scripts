@@ -375,79 +375,220 @@ elif page == "Image And Docs Converted":
                     st.error(f"Merge failed: {e}")
 
     # ----------------- WORD DOCS TO PDF (WITH ZIP FUNCTIONALITY) -----------------
+    # with tab3:
+    #     st.subheader("Direct Word Document (.docx) to PDF Bulk Converter")
+    #     word_files = st.file_uploader("Upload Word Documents (.docx)", type=["docx"], accept_multiple_files=True, key="word_key")
+        
+    #     if word_files:
+    #         from docx import Document
+    #         from reportlab.lib.pagesizes import letter
+    #         from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+    #         from reportlab.lib.styles import getSampleStyleSheet
+            
+    #         st.info(f"Total {len(word_files)} Word document(s) uploaded.")
+            
+            # If there is only 1 Word document
+            # if len(word_files) == 1:
+            #     doc_file = word_files[0]
+            #     if st.button(f"Convert & Download {doc_file.name}", key="single_word_btn", use_container_width=True):
+            #         try:
+            #             doc = Document(doc_file)
+            #             pdf_buffer = io.BytesIO()
+            #             doc_template = SimpleDocTemplate(pdf_buffer, pagesize=letter)
+            #             styles = getSampleStyleSheet()
+            #             story = []
+            #             for para in doc.paragraphs:
+            #                 if para.text.strip():
+            #                     story.append(Paragraph(para.text, styles['Normal']))
+            #                     story.append(Spacer(1, 10))
+            #             doc_template.build(story)
+                        
+            #             st.success("Converted successfully!")
+            #             st.download_button(
+            #                 label="Download PDF",
+            #                 data=pdf_buffer.getvalue(),
+            #                 file_name=f"{doc_file.name.split('.')[0]}.pdf",
+            #                 mime="application/pdf",
+            #                 use_container_width=True
+            #             )
+            #         except Exception as e:
+            #             st.error(f"Failed: {e}")
+            
+            # # Case B: Zip multiple Word documents with a single button
+            # else:
+            #     if st.button("Convert All Docs & Create Zip", key="bulk_word_zip_btn", use_container_width=True):
+            #         try:
+            #             with st.spinner("Converting all docx files into bulk zip folder..."):
+            #                 zip_buffer = io.BytesIO()
+                            
+            #                 with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            #                     for idx, doc_file in enumerate(word_files):
+            #                         doc = Document(doc_file)
+            #                         pdf_buffer = io.BytesIO()
+            #                         doc_template = SimpleDocTemplate(pdf_buffer, pagesize=letter)
+            #                         styles = getSampleStyleSheet()
+            #                         story = []
+            #                         for para in doc.paragraphs:
+            #                             if para.text.strip():
+            #                                 story.append(Paragraph(para.text, styles['Normal']))
+            #                                 story.append(Spacer(1, 10))
+            #                         doc_template.build(story)
+                                    
+            #                         clean_name = f"{doc_file.name.split('.')[0]}.pdf"
+            #                         zip_file.writestr(clean_name, pdf_buffer.getvalue())
+                                    
+            #                 st.success("All Word Docs converted to PDFs successfully!")
+            #                 st.download_button(
+            #                     label="Download All Word PDFs (ZIP)",
+            #                     data=zip_buffer.getvalue(),
+            #                     file_name="All_Word_PDFs.zip",
+            #                     mime="application/zip",
+            #                     use_container_width=True
+            #                 )
+            #         except Exception as e:
+            #             st.error(f"Bulk conversion failed: {e}")    
+
+
+# ----------------- TAB 3: WORD DOCS TO PDF (FORMATTING PRESERVED) -----------------
     with tab3:
-        st.subheader("Direct Word Document (.docx) to PDF Bulk Converter")
+        st.markdown('<p class="section-header">Direct Word Document (.docx) to PDF Bulk Converter</p>', unsafe_allow_html=True)
         word_files = st.file_uploader("Upload Word Documents (.docx)", type=["docx"], accept_multiple_files=True, key="word_key")
         
         if word_files:
             from docx import Document
             from reportlab.lib.pagesizes import letter
             from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-            from reportlab.lib.styles import getSampleStyleSheet
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
             
-            st.info(f"Total {len(word_files)} Word document(s) uploaded.")
+            st.success(f"📝 {len(word_files)} docx files staged for precise conversion pipeline.")
             
-            # If there is only 1 Word document
+            # Helper function jo word text ki formatting aur fonts ko PDF friendly HTML tags me badalegi
+            def docx_to_html_paras(doc, styles):
+                story = []
+                
+                # Word ke default alignment mapping tables
+                align_map = {0: TA_LEFT, 1: TA_CENTER, 2: TA_RIGHT, 3: TA_JUSTIFY}
+                
+                for p_idx, para in enumerate(doc.paragraphs):
+                    text_html = ""
+                    # Paragraph ke andar ke text chunks (runs) ko check karna for formatting
+                    for run in para.runs:
+                        text = run.text
+                        if not text:
+                            continue
+                        
+                        # XML Entities escape logic
+                        text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                        
+                        # Apply style wrappers dynamically based on docx rules
+                        if run.bold:
+                            text = f"<b>{text}</b>"
+                        if run.italic:
+                            text = f"<i>{text}</i>"
+                        if run.underline:
+                            text = f"<u>{text}</u>"
+                            
+                        text_html += text
+                    
+                    if text_html.strip() or para.text.strip():
+                        # Paragraph specific dynamic alignment capture
+                        p_align = align_map.get(para.alignment, TA_LEFT) if para.alignment is not None else TA_LEFT
+                        
+                        # Custom style descriptor layer to preserve paragraph geometry
+                        custom_style = ParagraphStyle(
+                            name=f'DynamicPara_{p_idx}',
+                            parent=styles['Normal'],
+                            alignment=p_align,
+                            spaceBefore=6,
+                            spaceAfter=6,
+                            leading=14
+                        )
+                        
+                        story.append(Paragraph(text_html, custom_style))
+                    elif not para.text.strip() and p_idx > 0:
+                        # Blank line spacing structure tracking
+                        story.append(Spacer(1, 12))
+                        
+                return story
+
+            # Case A: Single Word Document Execution
             if len(word_files) == 1:
                 doc_file = word_files[0]
-                if st.button(f"Convert & Download {doc_file.name}", key="single_word_btn", use_container_width=True):
+                if st.button(f"📄 Convert & Process {doc_file.name}", key="single_word_btn", use_container_width=True):
                     try:
                         doc = Document(doc_file)
                         pdf_buffer = io.BytesIO()
-                        doc_template = SimpleDocTemplate(pdf_buffer, pagesize=letter)
+                        doc_template = SimpleDocTemplate(
+                            pdf_buffer, 
+                            pagesize=letter,
+                            rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54
+                        )
                         styles = getSampleStyleSheet()
-                        story = []
-                        for para in doc.paragraphs:
-                            if para.text.strip():
-                                story.append(Paragraph(para.text, styles['Normal']))
-                                story.append(Spacer(1, 10))
+                        
+                        # Parsing using the new formatting preservation block
+                        story = docx_to_html_paras(doc, styles)
+                        
+                        if not story:
+                            story.append(Paragraph("Empty Document Layout", styles['Normal']))
+                            
                         doc_template.build(story)
                         
-                        st.success("Converted successfully!")
+                        st.success("🎉 Word Document formatting parsed successfully!")
                         st.download_button(
-                            label="Download PDF",
+                            label="📥 Download Converted PDF",
                             data=pdf_buffer.getvalue(),
                             file_name=f"{doc_file.name.split('.')[0]}.pdf",
                             mime="application/pdf",
                             use_container_width=True
                         )
                     except Exception as e:
-                        st.error(f"Failed: {e}")
+                        st.error(f"Failed to preserve format: {e}")
             
-            # Case B: Zip multiple Word documents with a single button
+            # Case B: Bulk Processing Archiver (Multiple Files with ZIP)
             else:
-                if st.button("Convert All Docs & Create Zip", key="bulk_word_zip_btn", use_container_width=True):
+                if st.button("⚙️ Bulk Convert All Docs & Archive to ZIP", key="bulk_word_zip_btn", use_container_width=True):
                     try:
-                        with st.spinner("Converting all docx files into bulk zip folder..."):
+                        with st.spinner("Processing structural layout maps to ZIP..."):
                             zip_buffer = io.BytesIO()
-                            
                             with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
                                 for idx, doc_file in enumerate(word_files):
                                     doc = Document(doc_file)
                                     pdf_buffer = io.BytesIO()
-                                    doc_template = SimpleDocTemplate(pdf_buffer, pagesize=letter)
+                                    doc_template = SimpleDocTemplate(
+                                        pdf_buffer, 
+                                        pagesize=letter,
+                                        rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54
+                                    )
                                     styles = getSampleStyleSheet()
-                                    story = []
-                                    for para in doc.paragraphs:
-                                        if para.text.strip():
-                                            story.append(Paragraph(para.text, styles['Normal']))
-                                            story.append(Spacer(1, 10))
+                                    
+                                    # Formatted parser conversion loop
+                                    story = docx_to_html_paras(doc, styles)
+                                    
+                                    if not story:
+                                        story.append(Paragraph("Empty Document Layout", styles['Normal']))
+                                        
                                     doc_template.build(story)
                                     
                                     clean_name = f"{doc_file.name.split('.')[0]}.pdf"
                                     zip_file.writestr(clean_name, pdf_buffer.getvalue())
                                     
-                            st.success("All Word Docs converted to PDFs successfully!")
+                            st.success("🎉 All documents layout processed into zip archive!")
                             st.download_button(
-                                label="Download All Word PDFs (ZIP)",
+                                label="📥 Download Processed PDF Package (ZIP)",
                                 data=zip_buffer.getvalue(),
                                 file_name="All_Word_PDFs.zip",
                                 mime="application/zip",
                                 use_container_width=True
                             )
                     except Exception as e:
-                        st.error(f"Bulk conversion failed: {e}")    
-                        
+                        st.error(f"Bulk formatting failure: {e}")
+
+
+
+
+
+
 # PLACEHOLDERS FOR FUTURE WORK 
 elif page == "MSG Conversion":
     st.markdown('<p class="main-title">Message Conversion Dashboard</p>', unsafe_allow_html=True)
