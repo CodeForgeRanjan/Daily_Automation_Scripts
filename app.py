@@ -374,82 +374,7 @@ elif page == "Image And Docs Converted":
                 except Exception as e:
                     st.error(f"Merge failed: {e}")
 
-    # ----------------- WORD DOCS TO PDF (WITH ZIP FUNCTIONALITY) -----------------
-    # with tab3:
-    #     st.subheader("Direct Word Document (.docx) to PDF Bulk Converter")
-    #     word_files = st.file_uploader("Upload Word Documents (.docx)", type=["docx"], accept_multiple_files=True, key="word_key")
-        
-    #     if word_files:
-    #         from docx import Document
-    #         from reportlab.lib.pagesizes import letter
-    #         from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-    #         from reportlab.lib.styles import getSampleStyleSheet
-            
-    #         st.info(f"Total {len(word_files)} Word document(s) uploaded.")
-            
-            # If there is only 1 Word document
-            # if len(word_files) == 1:
-            #     doc_file = word_files[0]
-            #     if st.button(f"Convert & Download {doc_file.name}", key="single_word_btn", use_container_width=True):
-            #         try:
-            #             doc = Document(doc_file)
-            #             pdf_buffer = io.BytesIO()
-            #             doc_template = SimpleDocTemplate(pdf_buffer, pagesize=letter)
-            #             styles = getSampleStyleSheet()
-            #             story = []
-            #             for para in doc.paragraphs:
-            #                 if para.text.strip():
-            #                     story.append(Paragraph(para.text, styles['Normal']))
-            #                     story.append(Spacer(1, 10))
-            #             doc_template.build(story)
-                        
-            #             st.success("Converted successfully!")
-            #             st.download_button(
-            #                 label="Download PDF",
-            #                 data=pdf_buffer.getvalue(),
-            #                 file_name=f"{doc_file.name.split('.')[0]}.pdf",
-            #                 mime="application/pdf",
-            #                 use_container_width=True
-            #             )
-            #         except Exception as e:
-            #             st.error(f"Failed: {e}")
-            
-            # # Case B: Zip multiple Word documents with a single button
-            # else:
-            #     if st.button("Convert All Docs & Create Zip", key="bulk_word_zip_btn", use_container_width=True):
-            #         try:
-            #             with st.spinner("Converting all docx files into bulk zip folder..."):
-            #                 zip_buffer = io.BytesIO()
-                            
-            #                 with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-            #                     for idx, doc_file in enumerate(word_files):
-            #                         doc = Document(doc_file)
-            #                         pdf_buffer = io.BytesIO()
-            #                         doc_template = SimpleDocTemplate(pdf_buffer, pagesize=letter)
-            #                         styles = getSampleStyleSheet()
-            #                         story = []
-            #                         for para in doc.paragraphs:
-            #                             if para.text.strip():
-            #                                 story.append(Paragraph(para.text, styles['Normal']))
-            #                                 story.append(Spacer(1, 10))
-            #                         doc_template.build(story)
-                                    
-            #                         clean_name = f"{doc_file.name.split('.')[0]}.pdf"
-            #                         zip_file.writestr(clean_name, pdf_buffer.getvalue())
-                                    
-            #                 st.success("All Word Docs converted to PDFs successfully!")
-            #                 st.download_button(
-            #                     label="Download All Word PDFs (ZIP)",
-            #                     data=zip_buffer.getvalue(),
-            #                     file_name="All_Word_PDFs.zip",
-            #                     mime="application/zip",
-            #                     use_container_width=True
-            #                 )
-            #         except Exception as e:
-            #             st.error(f"Bulk conversion failed: {e}")    
-
-
-# ----------------- TAB 3: WORD DOCS TO PDF (FORMATTING PRESERVED) -----------------
+   # ----------------- TAB 3: WORD DOCS TO PDF (EXACT MIRROR FORMAT PRESERVED) -----------------
     with tab3:
         st.markdown('<p class="section-header">Direct Word Document (.docx) to PDF Bulk Converter</p>', unsafe_allow_html=True)
         word_files = st.file_uploader("Upload Word Documents (.docx)", type=["docx"], accept_multiple_files=True, key="word_key")
@@ -457,58 +382,134 @@ elif page == "Image And Docs Converted":
         if word_files:
             from docx import Document
             from reportlab.lib.pagesizes import letter
-            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
             from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
             from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
+            from reportlab.lib import colors
             
-            st.success(f"📝 {len(word_files)} docx files staged for precise conversion pipeline.")
+            st.success(f"📝 {len(word_files)} docx files staged for precise HCL/Portal structure conversion.")
             
-            # Helper function jo word text ki formatting aur fonts ko PDF friendly HTML tags me badalegi
-            def docx_to_html_paras(doc, styles):
+            # --- ADVANCED FORMATTING ENGINE FOR SOF & TABLES ---
+            def precise_docx_to_pdf_story(doc, styles):
                 story = []
-                
-                # Word ke default alignment mapping tables
                 align_map = {0: TA_LEFT, 1: TA_CENTER, 2: TA_RIGHT, 3: TA_JUSTIFY}
                 
-                for p_idx, para in enumerate(doc.paragraphs):
+                # Setup basic custom styles
+                normal_style = styles['Normal']
+                
+                # Word file ke paragraphs aur tables ko sequence wise padhne ke liye logic
+                body_elements = doc.element.body
+                element_index = 0
+                
+                # Dynamic style container helper
+                def get_clean_html_text(para):
                     text_html = ""
-                    # Paragraph ke andar ke text chunks (runs) ko check karna for formatting
                     for run in para.runs:
                         text = run.text
                         if not text:
                             continue
-                        
-                        # XML Entities escape logic
+                        # XML characters escape logic to prevent system crash
                         text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
                         
-                        # Apply style wrappers dynamically based on docx rules
+                        # Handle special checkboxes symbols if any
+                        text = text.replace('☐', '<font name="Helvetica" size="12">&#9633;</font>')
+                        
                         if run.bold:
                             text = f"<b>{text}</b>"
                         if run.italic:
                             text = f"<i>{text}</i>"
                         if run.underline:
                             text = f"<u>{text}</u>"
-                            
                         text_html += text
-                    
-                    if text_html.strip() or para.text.strip():
-                        # Paragraph specific dynamic alignment capture
-                        p_align = align_map.get(para.alignment, TA_LEFT) if para.alignment is not None else TA_LEFT
+                    return text_html
+
+                # Loop through all elements in order (Paragraphs + Tables)
+                for child in body_elements:
+                    # 1. PARAGRAPH PROCESSING
+                    if child.tag.endswith('p'):
+                        from docx.text.paragraph import Paragraph as DocxParagraph
+                        para = DocxParagraph(child, doc)
+                        text_html = get_clean_html_text(para)
                         
-                        # Custom style descriptor layer to preserve paragraph geometry
-                        custom_style = ParagraphStyle(
-                            name=f'DynamicPara_{p_idx}',
-                            parent=styles['Normal'],
-                            alignment=p_align,
-                            spaceBefore=6,
-                            spaceAfter=6,
-                            leading=14
-                        )
+                        if text_html.strip() or para.text.strip():
+                            p_align = align_map.get(para.alignment, TA_LEFT) if para.alignment is not None else TA_LEFT
+                            
+                            # Distinct styling for Headings vs Body Text
+                            is_heading = any(kw in para.text for kw in ["SOF For Employment", "Employment Summary", "HCL Candidate: Additional Statement"])
+                            
+                            style_name = f'PrecisePara_{element_index}'
+                            p_style = ParagraphStyle(
+                                name=style_name,
+                                parent=normal_style,
+                                alignment=p_align,
+                                fontSize=11 if is_heading else 9.5,
+                                leading=15 if is_heading else 13.5,
+                                spaceBefore=8 if is_heading else 4,
+                                spaceAfter=8 if is_heading else 4,
+                                textTransform='uppercase' if is_heading else None
+                            )
+                            
+                            # If it's a heading, make it bold automatically
+                            if is_heading and not text_html.startswith("<b>"):
+                                text_html = f"<b>{text_html}</b>"
+                                
+                            story.append(Paragraph(text_html, p_style))
+                        elif not para.text.strip():
+                            story.append(Spacer(1, 8))
+                        element_index += 1
                         
-                        story.append(Paragraph(text_html, custom_style))
-                    elif not para.text.strip() and p_idx > 0:
-                        # Blank line spacing structure tracking
-                        story.append(Spacer(1, 12))
+                    # 2. TABLE PROCESSING (VLOOKUP / DOCUMENT MATRICES)
+                    elif child.tag.endswith('tbl'):
+                        from docx.table import Table as DocxTable
+                        docx_table = DocxTable(child, doc)
+                        
+                        table_data = []
+                        for row in docx_table.rows:
+                            row_data = []
+                            for cell in row.cells:
+                                # Cell ke andar ka text layout handle karein
+                                cell_html = ""
+                                for p in cell.paragraphs:
+                                    cell_html += get_clean_html_text(p)
+                                
+                                # Cell wrapper style
+                                cell_style = ParagraphStyle(
+                                    name=f'Cell_{element_index}_{len(row_data)}',
+                                    parent=normal_style,
+                                    fontSize=9,
+                                    leading=12
+                                )
+                                row_data.append(Paragraph(cell_html, cell_style))
+                            table_data.append(row_data)
+                        
+                        if table_data:
+                            # Dynamic Column Width adjustment for A4 page sizing
+                            num_cols = len(table_data[0])
+                            col_widths = [504 / num_cols] * num_cols  # Total available width = 504 (612 - 54*2)
+                            
+                            # Agar HCL format ka check matrix table hai (2 columns)
+                            if num_cols == 2:
+                                col_widths = [204, 300]
+                            elif num_cols == 4:
+                                col_widths = [34, 220, 100, 150]
+                                
+                            pdf_table = Table(table_data, colWidths=col_widths, repeatRows=1)
+                            
+                            # Premium Grid style mapping to look identical to Word borders
+                            pdf_table.setStyle(TableStyle([
+                                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#F3F4F6')), # Light Gray Header
+                                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                                ('TOPPADDING', (0, 0), (-1, -1), 5),
+                                ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+                                ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                                ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+                                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#9CA3AF')), # Subtle thin borders
+                            ]))
+                            story.append(Spacer(1, 6))
+                            story.append(pdf_table)
+                            story.append(Spacer(1, 6))
+                        element_index += 1
                         
                 return story
 
@@ -526,15 +527,14 @@ elif page == "Image And Docs Converted":
                         )
                         styles = getSampleStyleSheet()
                         
-                        # Parsing using the new formatting preservation block
-                        story = docx_to_html_paras(doc, styles)
+                        story = precise_docx_to_pdf_story(doc, styles)
                         
                         if not story:
                             story.append(Paragraph("Empty Document Layout", styles['Normal']))
                             
                         doc_template.build(story)
                         
-                        st.success("🎉 Word Document formatting parsed successfully!")
+                        st.success("🎉 Word Document formatting and tables mirrored perfectly!")
                         st.download_button(
                             label="📥 Download Converted PDF",
                             data=pdf_buffer.getvalue(),
@@ -549,7 +549,7 @@ elif page == "Image And Docs Converted":
             else:
                 if st.button("⚙️ Bulk Convert All Docs & Archive to ZIP", key="bulk_word_zip_btn", use_container_width=True):
                     try:
-                        with st.spinner("Processing structural layout maps to ZIP..."):
+                        with st.spinner("Processing structural layouts and grid formats to ZIP..."):
                             zip_buffer = io.BytesIO()
                             with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
                                 for idx, doc_file in enumerate(word_files):
@@ -562,8 +562,7 @@ elif page == "Image And Docs Converted":
                                     )
                                     styles = getSampleStyleSheet()
                                     
-                                    # Formatted parser conversion loop
-                                    story = docx_to_html_paras(doc, styles)
+                                    story = precise_docx_to_pdf_story(doc, styles)
                                     
                                     if not story:
                                         story.append(Paragraph("Empty Document Layout", styles['Normal']))
@@ -573,7 +572,7 @@ elif page == "Image And Docs Converted":
                                     clean_name = f"{doc_file.name.split('.')[0]}.pdf"
                                     zip_file.writestr(clean_name, pdf_buffer.getvalue())
                                     
-                            st.success("🎉 All documents layout processed into zip archive!")
+                            st.success("🎉 All documents layout and grids processed into zip archive!")
                             st.download_button(
                                 label="📥 Download Processed PDF Package (ZIP)",
                                 data=zip_buffer.getvalue(),
@@ -583,7 +582,6 @@ elif page == "Image And Docs Converted":
                             )
                     except Exception as e:
                         st.error(f"Bulk formatting failure: {e}")
-
 
 
 
