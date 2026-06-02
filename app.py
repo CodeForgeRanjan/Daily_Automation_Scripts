@@ -40,7 +40,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ----------------- CLEANING FUNCTIONS -----------------
+# CLEANING FUNCTIONS 
 def clean_text_proper(text):
     if pd.isna(text) or str(text).strip() == "": 
         return ""
@@ -99,8 +99,8 @@ def remove_illegal_chars(val):
         return ""
     return "".join(ch for ch in str(val) if ch.isprintable())
 
-# ----------------- SIDEBAR NAVIGATION -----------------
-st.sidebar.markdown('<p class="sidebar-heading">🚗 Navigation Menu</p>', unsafe_allow_html=True)
+#  SIDEBAR NAVIGATION 
+st.sidebar.markdown('<p class="sidebar-heading">Navigation Menu</p>', unsafe_allow_html=True)
 page = st.sidebar.radio("Go to:", ["Uber Data Upload", "Image And Docs Converted", "MSG Conversion", "ARS Check Updation" ,"About Tool"])
 
 
@@ -124,19 +124,6 @@ if page == "Uber Data Upload":
     with col2:
         st.markdown('<p class="section-header">Pincode Master Database</p>', unsafe_allow_html=True)
         master_file = st.file_uploader("Upload Pincode Master File", type=["xlsx", "xls"], key="master_file", label_visibility="collapsed")
-        
-    # with col2:
-    #     st.subheader("2. Pincode Master Data")
-    #     master_file = st.file_uploader("Upload Pincode Master File", type=["xlsx", "xls"], key="master_file")
-
-    
-
-    # --- CLEAR BUTTON  ---
-    # if uber_file is not None or master_file is not None:
-    #     st.markdown("---")
-    #     if st.button("Clear Dashboard & Reset Files", use_container_width=True):
-    #         st.cache_data.clear()
-    #         st.rerun()
 
     if uber_file is not None and master_file is not None:
         # Clear button layout with custom style
@@ -151,7 +138,7 @@ if page == "Uber Data Upload":
                 master_df = pd.read_excel(master_file, sheet_name='Sheet1')
                 master_df.columns = master_df.columns.str.strip()
 
-                # --- APPLY CLEANING ---
+                # APPLY CLEANING 
                 df['Candidate Name'] = df.iloc[:, 1].apply(clean_text_proper)
                 df['Father Name'] = df.iloc[:, 2].apply(clean_text_proper)
                 df['Cleaned_Address'] = df.iloc[:, 4].apply(clean_address)
@@ -160,7 +147,7 @@ if page == "Uber Data Upload":
                 # Name Split logic
                 df[['First', 'Middle', 'Last']] = df['Candidate Name'].apply(lambda x: pd.Series(split_name(x)))
 
-                # --- MAPPING & VLOOKUP ---
+                # MAPPING & VLOOKUP 
                 df['PIN_Extracted'] = df['PIN_Extracted'].astype(str).str.strip()
                 master_df['PIN CODE'] = master_df['PIN CODE'].astype(str).str.strip()
                 master_unique = master_df.drop_duplicates(subset=['PIN CODE'])
@@ -170,7 +157,7 @@ if page == "Uber Data Upload":
                     left_on='PIN_Extracted', right_on='PIN CODE', how='left'
                 )
 
-                # --- EXACT FINAL OUTPUT STRUCTURE ---
+                # EXACT FINAL OUTPUT STRUCTURE 
                 final = pd.DataFrame()
                 final['First_Name'] = df['First']
                 final['Middle_Name'] = df['Middle']
@@ -253,7 +240,7 @@ if page == "Uber Data Upload":
     elif uber_file is not None and master_file is None:
         st.info(" Please upload the Pincode Master file to process automatic City & City ID mapping.")
 
-# ================= IMAGE & DOCS CONVERTED (ZIP + AUTO-ROTATE ENABLED) =================
+#  IMAGE & DOCS CONVERTED (ZIP + AUTO-ROTATE ENABLED) 
 elif page == "Image And Docs Converted":
     import zipfile  # Create a Zip folder for inbuilt module
     from PIL import ImageOps  # Automate rotation images
@@ -263,7 +250,7 @@ elif page == "Image And Docs Converted":
 
     tab1, tab2, tab3 = st.tabs(["Single Image to PDF", "Bulk Merge to One PDF", "Word Docs to PDF"])
 
-    # ----------------- SINGLE IMAGE TO SINGLE PDF (WITH ZIP & AUTO-ROTATE) -----------------
+    #  SINGLE IMAGE TO SINGLE PDF (WITH ZIP & AUTO-ROTATE) 
     with tab1:
         st.subheader("Convert Individual Images to Separate PDFs")
         single_images = st.file_uploader("Upload Images (Individual Conversion)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="single_key")
@@ -338,7 +325,7 @@ elif page == "Image And Docs Converted":
                     except Exception as e:
                         st.error(f"Zip Creation Failed: {e}")
 
-    # ----------------- MULTIPLE IMAGES TO ONE MERGE PDF -----------------
+    # MULTIPLE IMAGES TO ONE MERGE PDF 
     with tab2:
         st.subheader("Compile Multiple Images into a Single Candidate PDF Report")
         bulk_images = st.file_uploader("Upload Multiple Images (All will be merged into a single PDF)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="bulk_key")
@@ -374,7 +361,7 @@ elif page == "Image And Docs Converted":
                 except Exception as e:
                     st.error(f"Merge failed: {e}")
 
-   # ----------------- TAB 3: WORD DOCS TO PDF (EXACT MIRROR FORMAT PRESERVED) -----------------
+  #  UNIVERSAL WORD DOCS TO PDF (EXACT MIRROR COPY) 
     with tab3:
         st.markdown('<p class="section-header">Direct Word Document (.docx) to PDF Bulk Converter</p>', unsafe_allow_html=True)
         word_files = st.file_uploader("Upload Word Documents (.docx)", type=["docx"], accept_multiple_files=True, key="word_key")
@@ -387,23 +374,24 @@ elif page == "Image And Docs Converted":
             from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
             from reportlab.lib import colors
             
-            st.success(f"📝 {len(word_files)} docx files staged for precise HCL/Portal structure conversion.")
+            st.success(f"{len(word_files)} docx file(s) staged for universal format conversion.")
             
-            # --- GARDA FORMATTING ENGINE FOR HCL SOF ---
-            def precise_docx_to_pdf_story(doc, styles):
+            # DYNAMIC UNIVERSAL CONVERSION ENGINE 
+            def universal_docx_to_pdf_story(doc, styles):
                 story = []
                 align_map = {0: TA_LEFT, 1: TA_CENTER, 2: TA_RIGHT, 3: TA_JUSTIFY}
                 normal_style = styles['Normal']
                 
+                # Function that removes inner formatting of text (Bold, Italic, Underline, Checkbox)
                 def get_clean_html_text(para):
                     text_html = ""
                     for run in para.runs:
                         text = run.text
                         if not text:
                             continue
-                        # XML characters escape logic
+                        # XML characters escape logic to prevent crashes
                         text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-                        # Checkbox render engine fix
+                        # Universal checkbox character rendering
                         text = text.replace('☐', '<font name="Helvetica" size="11">&#9633;</font>')
                         
                         if run.bold:
@@ -419,7 +407,7 @@ elif page == "Image And Docs Converted":
                 element_index = 0
                 
                 for child in body_elements:
-                    # 1. PARAGRAPH & ALIGNMENT PROCESSING
+                    # 1. PARAGRAPH PROCESSING (Universal Rules)
                     if child.tag.endswith('p'):
                         from docx.text.paragraph import Paragraph as DocxParagraph
                         para = DocxParagraph(child, doc)
@@ -429,17 +417,15 @@ elif page == "Image And Docs Converted":
                             story.append(Spacer(1, 6))
                             continue
                         
-                        # ANTI-KHICHDI LOGIC: HCL ke key-value key pairs (E.g. Employer Name    Bright...) ko handle karna
-                        # Agar text me bada tab gap hai, toh use borderless table me map karo taaki overlap na ho
+                        # if there are large tabs/spaces between text (compatible with every client)
                         if "\t" in para.text or "   " in para.text:
-                            # Split by multiple spaces or tabs
                             parts = [p.strip() for p in re.split(r'\t+|\s{3,}', para.text) if p.strip()]
                             if len(parts) >= 2:
                                 key_text = parts[0]
                                 value_text = " ".join(parts[1:])
                                 
-                                k_style = ParagraphStyle(name=f'K_{element_index}', parent=normal_style, fontSize=9.5, leading=13, fontName="Helvetica-Bold")
-                                v_style = ParagraphStyle(name=f'V_{element_index}', parent=normal_style, fontSize=9.5, leading=13)
+                                k_style = ParagraphStyle(name=f'UniK_{element_index}', parent=normal_style, fontSize=9.5, leading=13, fontName="Helvetica-Bold")
+                                v_style = ParagraphStyle(name=f'UniV_{element_index}', parent=normal_style, fontSize=9.5, leading=13)
                                 
                                 row_data = [[Paragraph(key_text, k_style), Paragraph(value_text, v_style)]]
                                 kv_table = Table(row_data, colWidths=[180, 324])
@@ -457,26 +443,21 @@ elif page == "Image And Docs Converted":
                         text_html = get_clean_html_text(para)
                         p_align = align_map.get(para.alignment, TA_LEFT) if para.alignment is not None else TA_LEFT
                         
-                        # Headings classification
-                        is_heading = any(kw in raw_text for kw in ["SOF For Employment", "Employment Summary", "HCL Candidate", "Statement of Fact"])
-                        
+                        # It will dynamically scale according to the size/style selected by the user in the Word file.
                         p_style = ParagraphStyle(
-                            name=f'PrecisePara_{element_index}',
+                            name=f'UniversalPara_{element_index}',
                             parent=normal_style,
-                            alignment=TA_CENTER if is_heading else p_align,
-                            fontSize=12 if is_heading else 9.5,
-                            leading=16 if is_heading else 14,
-                            spaceBefore=10 if is_heading else 4,
-                            spaceAfter=10 if is_heading else 4
+                            alignment=p_align,
+                            fontSize=9.5,
+                            leading=14,
+                            spaceBefore=4,
+                            spaceAfter=4
                         )
                         
-                        if is_heading and not text_html.startswith("<b>"):
-                            text_html = f"<b>{text_html}</b>"
-                            
                         story.append(Paragraph(text_html, p_style))
                         element_index += 1
                         
-                    # 2. GRID TABLE PROCESSING
+                    # UNIVERSAL TABLE/GRID PROCESSING
                     elif child.tag.endswith('tbl'):
                         from docx.table import Table as DocxTable
                         docx_table = DocxTable(child, doc)
@@ -490,7 +471,7 @@ elif page == "Image And Docs Converted":
                                     cell_html += get_clean_html_text(p)
                                 
                                 cell_style = ParagraphStyle(
-                                    name=f'Cell_{element_index}_{len(row_data)}',
+                                    name=f'UniCell_{element_index}_{len(row_data)}',
                                     parent=normal_style,
                                     fontSize=9,
                                     leading=12
@@ -500,24 +481,19 @@ elif page == "Image And Docs Converted":
                         
                         if table_data:
                             num_cols = len(table_data[0])
+                            # Auto-adjust column width based on columns count (Standard for any client table)
                             col_widths = [504 / num_cols] * num_cols
                             
-                            # HCL Specific Table Grid Column tuning
-                            if num_cols == 2:
-                                col_widths = [180, 324]
-                            elif num_cols == 5:
-                                col_widths = [34, 200, 65, 65, 140]
-                                
                             pdf_table = Table(table_data, colWidths=col_widths, repeatRows=1)
                             pdf_table.setStyle(TableStyle([
-                                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#F3F4F6')), 
+                                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#F9FAFB')), # clean header
                                 ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                                ('LEFTPADDING', (0, 0), (-1, -1), 6),
-                                ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-                                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#9CA3AF')), 
+                                ('TOPPADDING', (0, 0), (-1, -1), 5),
+                                ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+                                ('LEFTPADDING', (0, 0), (-1, -1), 5),
+                                ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+                                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#D1D5DB')), # Standard corporate borders
                             ]))
                             story.append(Spacer(1, 6))
                             story.append(pdf_table)
@@ -526,10 +502,10 @@ elif page == "Image And Docs Converted":
                         
                 return story
 
-            # Case A: Single Word Document Execution
+            # Single Word Document Execution
             if len(word_files) == 1:
                 doc_file = word_files[0]
-                if st.button(f"📄 Convert & Process {doc_file.name}", key="single_word_btn", use_container_width=True):
+                if st.button(f"Convert & Process {doc_file.name}", key="single_word_btn", use_container_width=True):
                     try:
                         doc = Document(doc_file)
                         pdf_buffer = io.BytesIO()
@@ -539,25 +515,25 @@ elif page == "Image And Docs Converted":
                             rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54
                         )
                         styles = getSampleStyleSheet()
-                        story = precise_docx_to_pdf_story(doc, styles)
+                        story = universal_docx_to_pdf_story(doc, styles)
                         doc_template.build(story)
                         
-                        st.success("🎉 Page 2 Khichdi Cleared! Formatting layout looks pixel perfect.")
+                        st.success("Document converted with universal layout styling!")
                         st.download_button(
-                            label="📥 Download Converted PDF",
+                            label="Download Converted PDF",
                             data=pdf_buffer.getvalue(),
                             file_name=f"{doc_file.name.split('.')[0]}.pdf",
                             mime="application/pdf",
                             use_container_width=True
                         )
                     except Exception as e:
-                        st.error(f"Formatting Fix Error: {e}")
+                        st.error(f"Conversion Error: {e}")
             
-            # Case B: Bulk Processing Archiver (Multiple Files with ZIP)
+            # Bulk Processing Archiver (Multiple Files with ZIP)
             else:
-                if st.button("⚙️ Bulk Convert All Docs & Archive to ZIP", key="bulk_word_zip_btn", use_container_width=True):
+                if st.button("Bulk Convert All Docs & Archive to ZIP", key="bulk_word_zip_btn", use_container_width=True):
                     try:
-                        with st.spinner("Processing structural grid fixes to ZIP..."):
+                        with st.spinner("Processing documents map to ZIP..."):
                             zip_buffer = io.BytesIO()
                             with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
                                 for idx, doc_file in enumerate(word_files):
@@ -569,15 +545,15 @@ elif page == "Image And Docs Converted":
                                         rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54
                                     )
                                     styles = getSampleStyleSheet()
-                                    story = precise_docx_to_pdf_story(doc, styles)
+                                    story = universal_docx_to_pdf_story(doc, styles)
                                     doc_template.build(story)
                                     
                                     clean_name = f"{doc_file.name.split('.')[0]}.pdf"
                                     zip_file.writestr(clean_name, pdf_buffer.getvalue())
                                     
-                            st.success("🎉 Bulk HCL Layouts generated cleanly into ZIP!")
+                            st.success("Bulk documents universally packed into ZIP!")
                             st.download_button(
-                                label="📥 Download Processed PDF Package (ZIP)",
+                                label="Download Processed PDF Package (ZIP)",
                                 data=zip_buffer.getvalue(),
                                 file_name="All_Word_PDFs.zip",
                                 mime="application/zip",
@@ -585,9 +561,6 @@ elif page == "Image And Docs Converted":
                             )
                     except Exception as e:
                         st.error(f"Bulk engine failure: {e}")
-
-
-
 
 
 # PLACEHOLDERS FOR FUTURE WORK 
