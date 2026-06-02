@@ -389,30 +389,22 @@ elif page == "Image And Docs Converted":
             
             st.success(f"📝 {len(word_files)} docx files staged for precise HCL/Portal structure conversion.")
             
-            # --- ADVANCED FORMATTING ENGINE FOR SOF & TABLES ---
+            # --- GARDA FORMATTING ENGINE FOR HCL SOF ---
             def precise_docx_to_pdf_story(doc, styles):
                 story = []
                 align_map = {0: TA_LEFT, 1: TA_CENTER, 2: TA_RIGHT, 3: TA_JUSTIFY}
-                
-                # Setup basic custom styles
                 normal_style = styles['Normal']
                 
-                # Word file ke paragraphs aur tables ko sequence wise padhne ke liye logic
-                body_elements = doc.element.body
-                element_index = 0
-                
-                # Dynamic style container helper
                 def get_clean_html_text(para):
                     text_html = ""
                     for run in para.runs:
                         text = run.text
                         if not text:
                             continue
-                        # XML characters escape logic to prevent system crash
+                        # XML characters escape logic
                         text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-                        
-                        # Handle special checkboxes symbols if any
-                        text = text.replace('☐', '<font name="Helvetica" size="12">&#9633;</font>')
+                        # Checkbox render engine fix
+                        text = text.replace('☐', '<font name="Helvetica" size="11">&#9633;</font>')
                         
                         if run.bold:
                             text = f"<b>{text}</b>"
@@ -423,42 +415,68 @@ elif page == "Image And Docs Converted":
                         text_html += text
                     return text_html
 
-                # Loop through all elements in order (Paragraphs + Tables)
+                body_elements = doc.element.body
+                element_index = 0
+                
                 for child in body_elements:
-                    # 1. PARAGRAPH PROCESSING
+                    # 1. PARAGRAPH & ALIGNMENT PROCESSING
                     if child.tag.endswith('p'):
                         from docx.text.paragraph import Paragraph as DocxParagraph
                         para = DocxParagraph(child, doc)
-                        text_html = get_clean_html_text(para)
+                        raw_text = para.text.strip()
                         
-                        if text_html.strip() or para.text.strip():
-                            p_align = align_map.get(para.alignment, TA_LEFT) if para.alignment is not None else TA_LEFT
-                            
-                            # Distinct styling for Headings vs Body Text
-                            is_heading = any(kw in para.text for kw in ["SOF For Employment", "Employment Summary", "HCL Candidate: Additional Statement"])
-                            
-                            style_name = f'PrecisePara_{element_index}'
-                            p_style = ParagraphStyle(
-                                name=style_name,
-                                parent=normal_style,
-                                alignment=p_align,
-                                fontSize=11 if is_heading else 9.5,
-                                leading=15 if is_heading else 13.5,
-                                spaceBefore=8 if is_heading else 4,
-                                spaceAfter=8 if is_heading else 4,
-                                textTransform='uppercase' if is_heading else None
-                            )
-                            
-                            # If it's a heading, make it bold automatically
-                            if is_heading and not text_html.startswith("<b>"):
-                                text_html = f"<b>{text_html}</b>"
+                        if not raw_text:
+                            story.append(Spacer(1, 6))
+                            continue
+                        
+                        # ANTI-KHICHDI LOGIC: HCL ke key-value key pairs (E.g. Employer Name    Bright...) ko handle karna
+                        # Agar text me bada tab gap hai, toh use borderless table me map karo taaki overlap na ho
+                        if "\t" in para.text or "   " in para.text:
+                            # Split by multiple spaces or tabs
+                            parts = [p.strip() for p in re.split(r'\t+|\s{3,}', para.text) if p.strip()]
+                            if len(parts) >= 2:
+                                key_text = parts[0]
+                                value_text = " ".join(parts[1:])
                                 
-                            story.append(Paragraph(text_html, p_style))
-                        elif not para.text.strip():
-                            story.append(Spacer(1, 8))
+                                k_style = ParagraphStyle(name=f'K_{element_index}', parent=normal_style, fontSize=9.5, leading=13, fontName="Helvetica-Bold")
+                                v_style = ParagraphStyle(name=f'V_{element_index}', parent=normal_style, fontSize=9.5, leading=13)
+                                
+                                row_data = [[Paragraph(key_text, k_style), Paragraph(value_text, v_style)]]
+                                kv_table = Table(row_data, colWidths=[180, 324])
+                                kv_table.setStyle(TableStyle([
+                                    ('VALIGN', (0,0), (-1,-1), 'TOP'),
+                                    ('TOPPADDING', (0,0), (-1,-1), 3),
+                                    ('BOTTOMPADDING', (0,0), (-1,-1), 3),
+                                    ('LEFTPADDING', (0,0), (-1,-1), 0),
+                                    ('RIGHTPADDING', (0,0), (-1,-1), 0),
+                                ]))
+                                story.append(kv_table)
+                                element_index += 1
+                                continue
+
+                        text_html = get_clean_html_text(para)
+                        p_align = align_map.get(para.alignment, TA_LEFT) if para.alignment is not None else TA_LEFT
+                        
+                        # Headings classification
+                        is_heading = any(kw in raw_text for kw in ["SOF For Employment", "Employment Summary", "HCL Candidate", "Statement of Fact"])
+                        
+                        p_style = ParagraphStyle(
+                            name=f'PrecisePara_{element_index}',
+                            parent=normal_style,
+                            alignment=TA_CENTER if is_heading else p_align,
+                            fontSize=12 if is_heading else 9.5,
+                            leading=16 if is_heading else 14,
+                            spaceBefore=10 if is_heading else 4,
+                            spaceAfter=10 if is_heading else 4
+                        )
+                        
+                        if is_heading and not text_html.startswith("<b>"):
+                            text_html = f"<b>{text_html}</b>"
+                            
+                        story.append(Paragraph(text_html, p_style))
                         element_index += 1
                         
-                    # 2. TABLE PROCESSING (VLOOKUP / DOCUMENT MATRICES)
+                    # 2. GRID TABLE PROCESSING
                     elif child.tag.endswith('tbl'):
                         from docx.table import Table as DocxTable
                         docx_table = DocxTable(child, doc)
@@ -467,12 +485,10 @@ elif page == "Image And Docs Converted":
                         for row in docx_table.rows:
                             row_data = []
                             for cell in row.cells:
-                                # Cell ke andar ka text layout handle karein
                                 cell_html = ""
                                 for p in cell.paragraphs:
                                     cell_html += get_clean_html_text(p)
                                 
-                                # Cell wrapper style
                                 cell_style = ParagraphStyle(
                                     name=f'Cell_{element_index}_{len(row_data)}',
                                     parent=normal_style,
@@ -483,28 +499,25 @@ elif page == "Image And Docs Converted":
                             table_data.append(row_data)
                         
                         if table_data:
-                            # Dynamic Column Width adjustment for A4 page sizing
                             num_cols = len(table_data[0])
-                            col_widths = [504 / num_cols] * num_cols  # Total available width = 504 (612 - 54*2)
+                            col_widths = [504 / num_cols] * num_cols
                             
-                            # Agar HCL format ka check matrix table hai (2 columns)
+                            # HCL Specific Table Grid Column tuning
                             if num_cols == 2:
-                                col_widths = [204, 300]
-                            elif num_cols == 4:
-                                col_widths = [34, 220, 100, 150]
+                                col_widths = [180, 324]
+                            elif num_cols == 5:
+                                col_widths = [34, 200, 65, 65, 140]
                                 
                             pdf_table = Table(table_data, colWidths=col_widths, repeatRows=1)
-                            
-                            # Premium Grid style mapping to look identical to Word borders
                             pdf_table.setStyle(TableStyle([
-                                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#F3F4F6')), # Light Gray Header
+                                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#F3F4F6')), 
                                 ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                                ('TOPPADDING', (0, 0), (-1, -1), 5),
-                                ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+                                ('TOPPADDING', (0, 0), (-1, -1), 6),
+                                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
                                 ('LEFTPADDING', (0, 0), (-1, -1), 6),
                                 ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-                                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#9CA3AF')), # Subtle thin borders
+                                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#9CA3AF')), 
                             ]))
                             story.append(Spacer(1, 6))
                             story.append(pdf_table)
@@ -526,15 +539,10 @@ elif page == "Image And Docs Converted":
                             rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54
                         )
                         styles = getSampleStyleSheet()
-                        
                         story = precise_docx_to_pdf_story(doc, styles)
-                        
-                        if not story:
-                            story.append(Paragraph("Empty Document Layout", styles['Normal']))
-                            
                         doc_template.build(story)
                         
-                        st.success("🎉 Word Document formatting and tables mirrored perfectly!")
+                        st.success("🎉 Page 2 Khichdi Cleared! Formatting layout looks pixel perfect.")
                         st.download_button(
                             label="📥 Download Converted PDF",
                             data=pdf_buffer.getvalue(),
@@ -543,13 +551,13 @@ elif page == "Image And Docs Converted":
                             use_container_width=True
                         )
                     except Exception as e:
-                        st.error(f"Failed to preserve format: {e}")
+                        st.error(f"Formatting Fix Error: {e}")
             
             # Case B: Bulk Processing Archiver (Multiple Files with ZIP)
             else:
                 if st.button("⚙️ Bulk Convert All Docs & Archive to ZIP", key="bulk_word_zip_btn", use_container_width=True):
                     try:
-                        with st.spinner("Processing structural layouts and grid formats to ZIP..."):
+                        with st.spinner("Processing structural grid fixes to ZIP..."):
                             zip_buffer = io.BytesIO()
                             with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
                                 for idx, doc_file in enumerate(word_files):
@@ -561,18 +569,13 @@ elif page == "Image And Docs Converted":
                                         rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54
                                     )
                                     styles = getSampleStyleSheet()
-                                    
                                     story = precise_docx_to_pdf_story(doc, styles)
-                                    
-                                    if not story:
-                                        story.append(Paragraph("Empty Document Layout", styles['Normal']))
-                                        
                                     doc_template.build(story)
                                     
                                     clean_name = f"{doc_file.name.split('.')[0]}.pdf"
                                     zip_file.writestr(clean_name, pdf_buffer.getvalue())
                                     
-                            st.success("🎉 All documents layout and grids processed into zip archive!")
+                            st.success("🎉 Bulk HCL Layouts generated cleanly into ZIP!")
                             st.download_button(
                                 label="📥 Download Processed PDF Package (ZIP)",
                                 data=zip_buffer.getvalue(),
@@ -581,7 +584,7 @@ elif page == "Image And Docs Converted":
                                 use_container_width=True
                             )
                     except Exception as e:
-                        st.error(f"Bulk formatting failure: {e}")
+                        st.error(f"Bulk engine failure: {e}")
 
 
 
