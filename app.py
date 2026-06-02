@@ -251,122 +251,13 @@ elif page == "Image And Docs Converted":
     tab1, tab2, tab3 = st.tabs(["Single Image to PDF", "Bulk Merge to One PDF", "Word Docs to PDF"])
 
     #  SINGLE IMAGE TO SINGLE PDF (WITH ZIP & AUTO-ROTATE) 
-    # with tab1:
-    #     st.subheader("Convert Individual Images to Separate PDFs")
-    #     single_images = st.file_uploader("Upload Images (Individual Conversion)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="single_key")
-        
-    #     # if single_images:
-    #     #     st.info(f"Total {len(single_images)} image(s) uploaded.")
-
-    #     if single_images:
-    #         st.success(f"Total {len(single_images)} image(s) uploaded successfully.")
-            
-    #         # If there is only 1 image then show normal download button
-    #         if len(single_images) == 1:
-    #             try:
-    #                 uploaded_img = single_images[0]
-    #                 img_data = io.BytesIO(uploaded_img.read())
-    #                 img = Image.open(img_data)
-                    
-    #                 # Auto-Orientation 
-    #                 img = ImageOps.exif_transpose(img)
-    #                 img = img.convert('RGB')
-                    
-    #                 # Resolution correction to Standard A4 Layout (Vertical / Portrait)
-    #                 img.thumbnail((1240, 1754), Image.Resampling.LANCZOS)
-                    
-    #                 pdf_buffer = io.BytesIO()
-    #                 img.save(pdf_buffer, format="PDF")
-    #                 pdf_bytes = pdf_buffer.getvalue()
-                    
-    #                 st.download_button(
-    #                     label=f"Download PDF: {uploaded_img.name}.pdf",
-    #                     data=pdf_bytes,
-    #                     file_name=f"{uploaded_img.name.split('.')[0]}.pdf",
-    #                     mime="application/pdf",
-    #                     use_container_width=True
-    #                 )
-    #             except Exception as e:
-    #                 st.error(f"Error: {e}")
-                    
-    #         # Show "Download All" zip button if there are more than 1 images
-    #         else:
-    #             if st.button("Process All Images & Create Zip", key="process_img_zip"):
-    #                 try:
-    #                     with st.spinner("Fixing resolution, orientation and creating Zip..."):
-    #                         zip_buffer = io.BytesIO()
-                            
-    #                         # Create a Zip folder in memory
-    #                         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-    #                             for idx, uploaded_img in enumerate(single_images):
-    #                                 img_data = io.BytesIO(uploaded_img.read())
-    #                                 img = Image.open(img_data)
-                                    
-    #                                 # Auto-rotate fix for flipped dimensions (E.g. 1166x1600 rotation)
-    #                                 img = ImageOps.exif_transpose(img)
-    #                                 img = img.convert('RGB')
-    #                                 img.thumbnail((1240, 1754), Image.Resampling.LANCZOS)
-                                    
-    #                                 pdf_buffer = io.BytesIO()
-    #                                 img.save(pdf_buffer, format="PDF")
-                                    
-    #                                 # Put files inside the zip
-    #                                 clean_name = f"{uploaded_img.name.split('.')[0]}.pdf"
-    #                                 zip_file.writestr(clean_name, pdf_buffer.getvalue())
-                                    
-    #                         st.success("All Images Converted successfully!")
-    #                         st.download_button(
-    #                             label="Download All PDFs in One Click (ZIP)",
-    #                             data=zip_buffer.getvalue(),
-    #                             file_name="All_Images_PDFs.zip",
-    #                             mime="application/zip",
-    #                             use_container_width=True
-    #                         )
-    #                 except Exception as e:
-    #                     st.error(f"Zip Creation Failed: {e}")
-
-    # # MULTIPLE IMAGES TO ONE MERGE PDF 
-    # with tab2:
-    #     st.subheader("Compile Multiple Images into a Single Candidate PDF Report")
-    #     bulk_images = st.file_uploader("Upload Multiple Images (All will be merged into a single PDF)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="bulk_key")
-        
-    #     if bulk_images:
-    #         st.success(f"Total {len(bulk_images)} images uploaded for merging.")
-    #         if st.button("Merge All Images into 1 PDF", key="merge_btn"):
-    #             try:
-    #                 with st.spinner("Compiling all images with auto-rotation check..."):
-    #                     img_list = []
-    #                     for uploaded_img in bulk_images:
-    #                         img_data = io.BytesIO(uploaded_img.read())
-    #                         img = Image.open(img_data)
-    #                         # Rotation and resolution check for merge list
-    #                         img = ImageOps.exif_transpose(img)
-    #                         img = img.convert('RGB')
-    #                         img.thumbnail((1240, 1754), Image.Resampling.LANCZOS)
-    #                         img_list.append(img)
-                        
-    #                     if img_list:
-    #                         pdf_buffer = io.BytesIO()
-    #                         img_list[0].save(pdf_buffer, format="PDF", save_all=True, append_images=img_list[1:])
-    #                         pdf_data = pdf_buffer.getvalue()
-                            
-    #                         st.success("Multi-page PDF Compiled!")
-    #                         st.download_button(
-    #                             label="Download Compiled PDF",
-    #                             data=pdf_data,
-    #                             file_name="Bulk_Merged_file.pdf",
-    #                             mime="application/pdf",
-    #                             use_container_width=True
-    #                         )
-    #             except Exception as e:
-    #                 st.error(f"Merge failed: {e}")
-
-
-#  SINGLE IMAGE TO SINGLE PDF (WITH ZIP & AUTO-ROTATE) 
     with tab1:
         st.subheader("Convert Individual Images to Separate PDFs")
         single_images = st.file_uploader("Upload Images (Individual Conversion)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="single_key")
         
+        # if single_images:
+        #     st.info(f"Total {len(single_images)} image(s) uploaded.")
+
         if single_images:
             st.success(f"Total {len(single_images)} image(s) uploaded successfully.")
             
@@ -381,7 +272,7 @@ elif page == "Image And Docs Converted":
                     img = ImageOps.exif_transpose(img)
                     img = img.convert('RGB')
                     
-                    # Resolution correction to Standard A4 Layout
+                    # Resolution correction to Standard A4 Layout (Vertical / Portrait)
                     img.thumbnail((1240, 1754), Image.Resampling.LANCZOS)
                     
                     pdf_buffer = io.BytesIO()
@@ -398,52 +289,77 @@ elif page == "Image And Docs Converted":
                 except Exception as e:
                     st.error(f"Error: {e}")
                     
-            # If there are more than 1 image, bypass the stable zip generator directly
+            # Show "Download All" zip button if there are more than 1 images
             else:
-                try:
-                    with st.spinner("⚡ Background engine rendering resolution and layout mapping..."):
-                        zip_buffer = io.BytesIO()
-                        
-                        # Create a Zip folder in memory directly from uploaded streams
-                        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-                            for idx, uploaded_img in enumerate(single_images):
-                                # Reset stream pointer to ensure safe reads
-                                uploaded_img.seek(0)
-                                raw_bytes = uploaded_img.read()
-                                
-                                if not raw_bytes:
-                                    continue
+                if st.button("Process All Images & Create Zip", key="process_img_zip"):
+                    try:
+                        with st.spinner("Fixing resolution, orientation and creating Zip..."):
+                            zip_buffer = io.BytesIO()
+                            
+                            # Create a Zip folder in memory
+                            with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                                for idx, uploaded_img in enumerate(single_images):
+                                    img_data = io.BytesIO(uploaded_img.read())
+                                    img = Image.open(img_data)
                                     
-                                img_data = io.BytesIO(raw_bytes)
-                                img = Image.open(img_data)
-                                
-                                # Auto-rotate fix for flipped dimensions
-                                img = ImageOps.exif_transpose(img)
-                                img = img.convert('RGB')
-                                img.thumbnail((1240, 1754), Image.Resampling.LANCZOS)
-                                
-                                pdf_buffer = io.BytesIO()
-                                img.save(pdf_buffer, format="PDF")
-                                
-                                # Put files inside the zip cleanly
-                                clean_name = f"{uploaded_img.name.split('.')[0]}.pdf"
-                                zip_file.writestr(clean_name, pdf_buffer.getvalue())
-                        
-                        zip_data = zip_buffer.getvalue()
-                        
-                        st.success("All Images Processed & Ready for Archiving!")
-                        st.download_button(
-                            label="Download All PDFs in One Click (ZIP)",
-                            data=zip_data,
-                            file_name="All_Images_PDFs.zip",
-                            mime="application/zip",
-                            use_container_width=True,
-                            key="download_zip_btn"
-                        )
-                except Exception as e:
-                    st.error(f"Zip Creation Failed due to dynamic buffer reset: {e}")
+                                    # Auto-rotate fix for flipped dimensions (E.g. 1166x1600 rotation)
+                                    img = ImageOps.exif_transpose(img)
+                                    img = img.convert('RGB')
+                                    img.thumbnail((1240, 1754), Image.Resampling.LANCZOS)
+                                    
+                                    pdf_buffer = io.BytesIO()
+                                    img.save(pdf_buffer, format="PDF")
+                                    
+                                    # Put files inside the zip
+                                    clean_name = f"{uploaded_img.name.split('.')[0]}.pdf"
+                                    zip_file.writestr(clean_name, pdf_buffer.getvalue())
+                                    
+                            st.success("All Images Converted successfully!")
+                            st.download_button(
+                                label="Download All PDFs in One Click (ZIP)",
+                                data=zip_buffer.getvalue(),
+                                file_name="All_Images_PDFs.zip",
+                                mime="application/zip",
+                                use_container_width=True
+                            )
+                    except Exception as e:
+                        st.error(f"Zip Creation Failed: {e}")
 
-    
+    # MULTIPLE IMAGES TO ONE MERGE PDF 
+    with tab2:
+        st.subheader("Compile Multiple Images into a Single Candidate PDF Report")
+        bulk_images = st.file_uploader("Upload Multiple Images (All will be merged into a single PDF)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="bulk_key")
+        
+        if bulk_images:
+            st.success(f"Total {len(bulk_images)} images uploaded for merging.")
+            if st.button("Merge All Images into 1 PDF", key="merge_btn"):
+                try:
+                    with st.spinner("Compiling all images with auto-rotation check..."):
+                        img_list = []
+                        for uploaded_img in bulk_images:
+                            img_data = io.BytesIO(uploaded_img.read())
+                            img = Image.open(img_data)
+                            # Rotation and resolution check for merge list
+                            img = ImageOps.exif_transpose(img)
+                            img = img.convert('RGB')
+                            img.thumbnail((1240, 1754), Image.Resampling.LANCZOS)
+                            img_list.append(img)
+                        
+                        if img_list:
+                            pdf_buffer = io.BytesIO()
+                            img_list[0].save(pdf_buffer, format="PDF", save_all=True, append_images=img_list[1:])
+                            pdf_data = pdf_buffer.getvalue()
+                            
+                            st.success("Multi-page PDF Compiled!")
+                            st.download_button(
+                                label="Download Compiled PDF",
+                                data=pdf_data,
+                                file_name="Bulk_Merged_file.pdf",
+                                mime="application/pdf",
+                                use_container_width=True
+                            )
+                except Exception as e:
+                    st.error(f"Merge failed: {e}")
 
   #  UNIVERSAL WORD DOCS TO PDF (EXACT MIRROR COPY) 
     with tab3:
