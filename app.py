@@ -40,7 +40,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# CLEANING FUNCTIONS 
+# CLEANING FUNCTIONS
 def clean_text_proper(text):
     if pd.isna(text) or str(text).strip() == "": 
         return ""
