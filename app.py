@@ -119,7 +119,7 @@ if page == "Uber Data Upload":
 
     with col1:
         st.markdown('<p class="section-header">Raw Data Input</p>', unsafe_allow_html=True)
-        uber_file = st.file_uploader("Upload CSV File", type=["csv"], key="uber_file", label_visibility="collapsed")
+        uber_file = st.file_uploader("Upload CSV File", type=["csv"], key="my_file", label_visibility="collapsed")
 
     with col2:
         st.markdown('<p class="section-header">Pincode Master Database</p>', unsafe_allow_html=True)
@@ -134,7 +134,7 @@ if page == "Uber Data Upload":
         try:
             with st.spinner("Processing your data... Please wait..."):
                 # Load Files
-                df = pd.read_csv(uber_file, encoding="latin1")
+                df = pd.read_csv(my_file, encoding="latin1")
                 master_df = pd.read_excel(master_file, sheet_name='Sheet1')
                 master_df.columns = master_df.columns.str.strip()
 
