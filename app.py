@@ -56,21 +56,19 @@ def clean_address(text):
 
 
     # --- NEW ADVANCED HYPERLINK / DRIVE LINK REMOVAL LAYER ---
-    # 1. Kisi bhi tarah ki Google Drive, http, https, ya www wali link ko completely saaf karo
-    # Yeh pattern handle karega: http://..., https://..., www...., aur bina protocol ke drive.google.com...
+    # http://..., https://..., www...., and without protocol drive.google.com...
     url_pattern = r'(https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b[-a-zA-Z0-9()@:%_\+.~#?&//=]*)|(www\.[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b[-a-zA-Z0-9()@:%_\+.~#?&//=]*)|(drive\.google\.com\/[^\s]*)'
     text = re.sub(url_pattern, '', text, flags=re.IGNORECASE)
     
-    # 2. Agar link ke aage "Drive link", "Link:", "URL" jaisa text bacha reh jaye, use bhi hatao
+    # If text like 'Drive Link', 'Link:', 'URL' remains in front of the link, remove it too
     text = re.sub(r'\b(?:drive\s*link|link|url)[:.-]?\s*_*', '', text, flags=re.IGNORECASE)
-    # ---------------------------------------------------------
+    
 
-    # --- NEW ADVANCED MOBILE NUMBER REMOVAL LAYER ---
-    # 1. Pehle agar address me 10-digit ka lagatar number hai (ya beech me space/dash hai), use saaf karo
-    # Yeh pattern handle karega: 9876543210, 98765-43210, 98765 43210
+    # --- NEW ADVANCED MOBILE NUMBER REMOVAL LAYER 
+    # To handle this type of pattern 9876543210, 98765-43210, 98765 43210
     text = re.sub(r'\b\d{5}[-\s]?\d{5}\b', '', text)
     
-    # 2. Agar mobile number ke sath text bhi likha ho (E.g. Mobile: 9876543210 ya Mob No- 9876543210)
+    # If text is also written with the mobile number (E.g. Mobile: 9876543210 ya Mob No- 9876543210)
     unwanted_mobile_patterns = [
         r'mobile\s*no(?:umber)?[:.-]?\s*\d*',
         r'mob(?:ile)?[:.-]?\s*\d*',
@@ -86,7 +84,7 @@ def clean_address(text):
         "DL-", "CARD", "card", "Adhar-", "Adhar No.", "DL", "Driving License", 
         "Driving Licence", "Driving Lic", "ADD","Driving Lc", "Licence", "License", 
         "Address", "Permanent Address", "Present Address", 
-        "CORRESPONDENCE ADDRESS", "CORRESPONDENCE", "PERMANENT:", ":", "-", ";", "#","mobile","Mobile","mobileno","mobile_no."
+        "CORRESPONDENCE ADDRESS", "CORRESPONDENCE", "PERMANENT:", ":", "-", ";", "#"
     ]
     for word in unwanted:
         text = re.sub(word, '', text, flags=re.IGNORECASE)
@@ -97,10 +95,10 @@ def extract_pin(text):
     if pd.isna(text) or str(text).strip() == "": 
         return ""
     
-    # 1. Pure address se saare 6-digit ke numbers ki list nikaalo
+    # Get a list of all 6-digit numbers from the given address
     all_matches = re.findall(r'\d{6}', str(text))
     
-    # 2. Agar matches mile, toh hamesha sabse LAST wala (index -1) pick karo
+    # If you get matches, always pick the LAST one (index -1)
     return all_matches[-1] if all_matches else ""
 
 def split_name(name):
@@ -132,23 +130,23 @@ def remove_illegal_chars(val):
 
 # --- FUZZY MATCHING HELPER ENGINE ---
 def find_closest_city_id(detected_district, master_unique_df):
-    """Sari unique districts list me se string comparison karke closest match ki ID layega"""
+    """It will take the ID of the closest match by comparing the string from the list of all unique districts."""
     if not detected_district or detected_district == "NA":
         return "NA"
     
-    # Master file ke unique district choices uthana
+    # Lifting Unique District Choices from Master File
     master_districts = master_unique_df['DISTRICT'].dropna().astype(str).tolist()
     
-    # RapidFuzz engine se top closest string match dhundhna
+    # RapidFuzz engine top closest string match 
     match_result = process.extractOne(
         detected_district, 
         master_districts, 
         processor=utils.default_process,
-        score_cutoff=70.0 # 70% se zyada similarity hone par hi accept karega
+        score_cutoff=70.0 # Will accept only if there is more than 70% similarity
     )
     if match_result:
         matched_name = match_result[0]
-        # Us matched district ka corresponding Row filter karke ID nikalna
+        # Filter the corresponding row of that matched district and get the ID
         matched_row = master_unique_df[master_unique_df['DISTRICT'].astype(str) == matched_name]
         if not matched_row.empty:
             return format_id(matched_row.iloc[0]['City ID/District ID'])
@@ -156,7 +154,7 @@ def find_closest_city_id(detected_district, master_unique_df):
     return "NA"
 
 
-#  SIDEBAR NAVIGATION 
+#  SIDEBAR NAVIGATION
 st.sidebar.markdown('<p class="sidebar-heading">Navigation Menu</p>', unsafe_allow_html=True)
 page = st.sidebar.radio("Go to:", ["Data Upload", "Image And Docs Converted", "MSG Conversion", "ARS Check Updation" ,"I bridge Allocation","About Tool"])
 
@@ -251,15 +249,15 @@ if page == "Data Upload":
                 master_district_unique = master_df.drop_duplicates(subset=['DISTRICT'])
                 
                 for idx, row in final.iterrows():
-                    # Agar pincode missing ya unmapped tha jisse City ID 'NA' ho gayi
+                    # If the Pincode was missing or unreadable, the City ID became 'No'
                     if row['City'] == 'NA' or row['City'] == '':
-                        # Address field se text nikal kar closest match dekhna
+                        # Extracting text from an address field and finding the closest match
                         address_str = str(row['Complete_Address'])
                         
-                        # Master unique directory se check karna
+                        # Master unique directory 
                         for m_dist in master_district_unique['DISTRICT'].dropna().astype(str):
                             if m_dist.lower() in address_str.lower():
-                                # Direct string keyword match hit ho gaya!
+                                #Direct string keyword match hit!
                                 matched_row = master_district_unique[master_district_unique['DISTRICT'] == m_dist]
                                 final.at[idx, 'City'] = format_id(matched_row.iloc[0]['City ID/District ID'])
                                 fuzzy_counter += 1
@@ -645,7 +643,6 @@ elif page == "Image And Docs Converted":
 # elif page == "MSG Conversion":
     # st.markdown('<p class="main-title">Message Conversion Dashboard</p>', unsafe_allow_html=True)
     # st.info("Work in progress...This route will be used for message formatting and log conversion.")
-# ----------------- PAGE: MSG CONVERSION TO PDF SUITE -----------------
 # ----------------- PAGE: MSG & EML CONVERSION TO PDF SUITE -----------------
 elif page == "MSG Conversion":
         import extract_msg
@@ -657,19 +654,19 @@ elif page == "MSG Conversion":
         from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
         from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
         
-        st.markdown('<p class="main-title">📬 Premium MSG & EML Automation Hub</p>', unsafe_allow_html=True)
+        st.markdown('<p class="main-title">Premium MSG & EML Conversion</p>', unsafe_allow_html=True)
         st.write("Upload Outlook .msg or standard .eml files to instantly unpack text structures, map attachments, and download complete compiled PDF bundles.")
 
         # DUAL UPLOADER BUTTONS
         col_msg, col_eml = st.columns(2)
         
         with col_msg:
-            st.markdown('<p class="section-header">Option 1: Upload Outlook File</p>', unsafe_allow_html=True)
-            uploaded_msg = st.file_uploader("Upload Outlook Email Document (.msg)", type=["msg"], key="msg_file_uploader")
+            st.markdown('<p class="section-header">1: Upload msg File</p>', unsafe_allow_html=True)
+            uploaded_msg = st.file_uploader("Upload Document (.msg)", type=["msg"], key="msg_file_uploader")
             
         with col_eml:
-            st.markdown('<p class="section-header">Option 2: Upload Standard EML File</p>', unsafe_allow_html=True)
-            uploaded_eml = st.file_uploader("Upload Email Message File (.eml)", type=["eml"], key="eml_file_uploader")
+            st.markdown('<p class="section-header">2: Upload EML File</p>', unsafe_allow_html=True)
+            uploaded_eml = st.file_uploader("Upload File (.eml)", type=["eml"], key="eml_file_uploader")
 
         # Dynamic variable initialization
         email_body_text = ""
