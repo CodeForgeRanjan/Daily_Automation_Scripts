@@ -53,6 +53,21 @@ def clean_address(text):
         return ""
     
     text = "".join(ch for ch in str(text).strip() if ch.isprintable())
+
+    # --- NEW ADVANCED MOBILE NUMBER REMOVAL LAYER ---
+    # 1. Pehle agar address me 10-digit ka lagatar number hai (ya beech me space/dash hai), use saaf karo
+    # Yeh pattern handle karega: 9876543210, 98765-43210, 98765 43210
+    text = re.sub(r'\b\d{5}[-\s]?\d{5}\b', '', text)
+    
+    # 2. Agar mobile number ke sath text bhi likha ho (E.g. Mobile: 9876543210 ya Mob No- 9876543210)
+    unwanted_mobile_patterns = [
+        r'mobile\s*no(?:umber)?[:.-]?\s*\d*',
+        r'mob(?:ile)?[:.-]?\s*\d*',
+        r'ph(?:one)?\s*no(?:umber)?[:.-]?\s*\d*'
+    ]
+    for pattern in unwanted_mobile_patterns:
+        text = re.sub(pattern, '', text, flags=re.IGNORECASE)
+    
     
     unwanted = [
         "Aadhar Address", "address", "Rent agreement Address", "agreement Address", 
@@ -60,7 +75,7 @@ def clean_address(text):
         "DL-", "CARD", "card", "Adhar-", "Adhar No.", "DL", "Driving License", 
         "Driving Licence", "Driving Lic", "ADD","Driving Lc", "Licence", "License", 
         "Address", "Permanent Address", "Present Address", 
-        "CORRESPONDENCE ADDRESS", "CORRESPONDENCE", "PERMANENT:", ":", "-", ";", "#"
+        "CORRESPONDENCE ADDRESS", "CORRESPONDENCE", "PERMANENT:", ":", "-", ";", "#","mobile","Mobile","mobileno","mobile_no."
     ]
     for word in unwanted:
         text = re.sub(word, '', text, flags=re.IGNORECASE)
@@ -68,10 +83,14 @@ def clean_address(text):
     return text.title().strip()
 
 def extract_pin(text):
-    if pd.isna(text): 
+    if pd.isna(text) or str(text).strip() == "": 
         return ""
-    match = re.search(r'\d{6}', str(text))
-    return match.group(0) if match else ""
+    
+    # 1. Pure address se saare 6-digit ke numbers ki list nikaalo
+    all_matches = re.findall(r'\d{6}', str(text))
+    
+    # 2. Agar matches mile, toh hamesha sabse LAST wala (index -1) pick karo
+    return all_matches[-1] if all_matches else ""
 
 def split_name(name):
     parts = str(name).split()
