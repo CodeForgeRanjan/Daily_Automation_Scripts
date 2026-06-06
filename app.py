@@ -101,12 +101,12 @@ def remove_illegal_chars(val):
 
 #  SIDEBAR NAVIGATION 
 st.sidebar.markdown('<p class="sidebar-heading">Navigation Menu</p>', unsafe_allow_html=True)
-page = st.sidebar.radio("Go to:", ["Uber Data Upload", "Image And Docs Converted", "MSG Conversion", "ARS Check Updation" ,"About Tool"])
+page = st.sidebar.radio("Go to:", ["Data Upload", "Image And Docs Converted", "MSG Conversion", "ARS Check Updation" ,"About Tool"])
 
 
 if page == "Uber Data Upload":
-    st.markdown('<p class="main-title">Uber Data CleanUp Dashboard</p>', unsafe_allow_html=True)
-    st.write("Upload your raw Uber CSV file and Pincode Master file to instantly generate clean data.")
+    st.markdown('<p class="main-title">Data CleanUp Dashboard</p>', unsafe_allow_html=True)
+    st.write("Upload your raw CSV file and Pincode Master file to instantly generate clean data.")
 
     # Empty State Guide 
     st.info("Welcome! Please upload both required files below to trigger the automated data cleaning pipeline.")
@@ -119,7 +119,7 @@ if page == "Uber Data Upload":
 
     with col1:
         st.markdown('<p class="section-header">Uber Raw Data Input</p>', unsafe_allow_html=True)
-        uber_file = st.file_uploader("Upload Uber CSV File", type=["csv"], key="uber_file", label_visibility="collapsed")
+        uber_file = st.file_uploader("Upload CSV File", type=["csv"], key="uber_file", label_visibility="collapsed")
 
     with col2:
         st.markdown('<p class="section-header">Pincode Master Database</p>', unsafe_allow_html=True)
