@@ -3,6 +3,7 @@ import pandas as pd
 import re
 import io
 from PIL import Image
+from rapidfuzz import process, utils # Fast Fuzzy matching
 
 # Page Setup & Styling
 st.set_page_config(page_title="Multi-Utility Automation Tool", page_icon="🚗", layout="wide")
@@ -99,6 +100,33 @@ def remove_illegal_chars(val):
         return ""
     return "".join(ch for ch in str(val) if ch.isprintable())
 
+# --- FUZZY MATCHING HELPER ENGINE ---
+def find_closest_city_id(detected_district, master_unique_df):
+    """Sari unique districts list me se string comparison karke closest match ki ID layega"""
+    if not detected_district or detected_district == "NA":
+        return "NA"
+    
+    # Master file ke unique district choices uthana
+    master_districts = master_unique_df['DISTRICT'].dropna().astype(str).tolist()
+    
+    # RapidFuzz engine se top closest string match dhundhna
+    match_result = process.extractOne(
+        detected_district, 
+        master_districts, 
+        processor=utils.default_process,
+        score_cutoff=70.0 # 70% se zyada similarity hone par hi accept karega
+    )
+-------------------
+    if match_result:
+        matched_name = match_result[0]
+        # Us matched district ka corresponding Row filter karke ID nikalna
+        matched_row = master_unique_df[master_unique_df['DISTRICT'].astype(str) == matched_name]
+        if not matched_row.empty:
+            return format_id(matched_row.iloc[0]['City ID/District ID'])
+            
+    return "NA"
+
+
 #  SIDEBAR NAVIGATION 
 st.sidebar.markdown('<p class="sidebar-heading">Navigation Menu</p>', unsafe_allow_html=True)
 page = st.sidebar.radio("Go to:", ["Data Upload", "Image And Docs Converted", "MSG Conversion", "ARS Check Updation" ,"I bridge Allocation","About Tool"])
@@ -132,7 +160,7 @@ if page == "Data Upload":
             st.cache_data.clear()
             st.rerun()
         try:
-            with st.spinner("Processing your data... Please wait..."):
+            with st.spinner("Processing your data smart Fuzzy Matching... Please wait..."):
                 # Load Files
                 df = pd.read_csv(my_file, encoding="latin1")
                 master_df = pd.read_excel(master_file, sheet_name='Sheet1')
@@ -186,6 +214,28 @@ if page == "Data Upload":
                     final['City'] = df['City ID/District ID'].apply(format_id)
                 else:
                     final['City'] = "NA"
+
+                -------------------
+                # --- NEW SMART INTELLIGENT FUZZY RE-CORRECTION LAYER ---
+                fuzzy_counter = 0
+                # Unique Master references file array targeting
+                master_district_unique = master_df.drop_duplicates(subset=['DISTRICT'])
+                
+                for idx, row in final.iterrows():
+                    # Agar pincode missing ya unmapped tha jisse City ID 'NA' ho gayi
+                    if row['City'] == 'NA' or row['City'] == '':
+                        # Address field se text nikal kar closest match dekhna
+                        address_str = str(row['Complete_Address'])
+                        
+                        # Master unique directory se check karna
+                        for m_dist in master_district_unique['DISTRICT'].dropna().astype(str):
+                            if m_dist.lower() in address_str.lower():
+                                # Direct string keyword match hit ho gaya!
+                                matched_row = master_district_unique[master_district_unique['DISTRICT'] == m_dist]
+                                final.at[idx, 'City'] = format_id(matched_row.iloc[0]['City ID/District ID'])
+                                fuzzy_counter += 1
+                                break
+                                ------------------
 
                 final['Priority'] = ""
 
