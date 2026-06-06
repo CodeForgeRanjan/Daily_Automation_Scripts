@@ -646,42 +646,63 @@ elif page == "Image And Docs Converted":
     # st.markdown('<p class="main-title">Message Conversion Dashboard</p>', unsafe_allow_html=True)
     # st.info("Work in progress...This route will be used for message formatting and log conversion.")
 # ----------------- PAGE: MSG CONVERSION TO PDF SUITE -----------------
-elif page =="MSG Conversion":
+# ----------------- PAGE: MSG & EML CONVERSION TO PDF SUITE -----------------
+elif page == "MSG Conversion":
         import extract_msg
         import zipfile
+        from email import message_from_bytes
         from email.message import EmailMessage
         from email.utils import formatdate
         from reportlab.lib.pagesizes import letter
         from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
         from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
         
-        st.markdown('<p class="main-title">Premium MSG & EML Automation </p>', unsafe_allow_html=True)
-        st.write("Upload Outlook .msg files to instantly unpack text structures, map attachments, and download complete compiled PDF bundles.")
+        st.markdown('<p class="main-title">📬 Premium MSG & EML Automation Hub</p>', unsafe_allow_html=True)
+        st.write("Upload Outlook .msg or standard .eml files to instantly unpack text structures, map attachments, and download complete compiled PDF bundles.")
 
-        uploaded_msg = st.file_uploader("Upload Outlook Email Document (.msg)", type=["msg"], key="msg_file_uploader")
+        # DUAL UPLOADER BUTTONS
+        col_msg, col_eml = st.columns(2)
+        
+        with col_msg:
+            st.markdown('<p class="section-header">Option 1: Upload Outlook File</p>', unsafe_allow_html=True)
+            uploaded_msg = st.file_uploader("Upload Outlook Email Document (.msg)", type=["msg"], key="msg_file_uploader")
+            
+        with col_eml:
+            st.markdown('<p class="section-header">Option 2: Upload Standard EML File</p>', unsafe_allow_html=True)
+            uploaded_eml = st.file_uploader("Upload Email Message File (.eml)", type=["eml"], key="eml_file_uploader")
 
+        # Dynamic variable initialization
+        email_body_text = ""
+        email_subject = "No Subject"
+        email_from = "Unknown Sender"
+        email_to = "Unknown Receiver"
+        email_date = formatdate(localtime=True)
+        valid_attachments = []
+        base_name = "Email_Package"
+
+        # --- CASE 1: IF USER UPLOADS MSG FILE ---
         if uploaded_msg is not None:
             try:
-                # --- STEP 1: CONVERT MSG TO EML IN MEMORY ---
                 with st.spinner("Decoding Outlook MSG binary data streams..."):
                     msg = extract_msg.Message(uploaded_msg)
-                    
-                    # Create EML Structure
-                    email_msg = EmailMessage()
-                    email_msg["From"] = msg.sender or "Unknown Sender"
-                    email_msg["To"] = msg.to or "Unknown Receiver"
-                    email_msg["Subject"] = msg.subject or "No Subject"
-                    email_msg["Date"] = formatdate(localtime=True)
-                    email_msg.set_content(msg.body or "")
-                    
-                    eml_bytes = email_msg.as_bytes()
+                    email_from = msg.sender or "Unknown Sender"
+                    email_to = msg.to or "Unknown Receiver"
+                    email_subject = msg.subject or "No Subject"
+                    email_body_text = msg.body or ""
                     base_name = uploaded_msg.name.split('.')[0]
+                    
+                    # EML backup generator for download button
+                    email_msg_obj = EmailMessage()
+                    email_msg_obj["From"] = email_from
+                    email_msg_obj["To"] = email_to
+                    email_msg_obj["Subject"] = email_subject
+                    email_msg_obj["Date"] = email_date
+                    email_msg_obj.set_content(email_body_text)
+                    eml_bytes = email_msg_obj.as_bytes()
                 
-                # Instant Flash Popup for EML Conversion Success
                 st.toast(f"🎉 EML Conversion Successful for: {base_name}", icon="🚀")
                 st.success("✨ Outlook Message file compiled to EML standards successfully!")
-
-                # Provide direct intermediate EML download option if required
+                
                 st.download_button(
                     label="📥 Download Converted EML File",
                     data=eml_bytes,
@@ -689,37 +710,87 @@ elif page =="MSG Conversion":
                     mime="message/rfc822",
                     use_container_width=True
                 )
-
-                st.markdown("---")
-                st.markdown('<p class="section-header">📁 Attachment Inventory & Metadata Tracker</p>', unsafe_allow_html=True)
-
-                # --- STEP 2: SCAN AND INVENTORY ATTACHMENTS ---
-                valid_attachments = []
+                
+                # Extract attachments from MSG
                 if msg.attachments:
                     for att in msg.attachments:
                         f_name = att.longFilename or att.shortFilename
                         if f_name:
-                            # Split name and check extension compatibility
                             ext = f_name.split('.')[-1].lower() if '.' in f_name else ''
                             if ext in ['pdf', 'docx']:
                                 valid_attachments.append({"name": f_name, "type": ext.upper(), "raw_data": att.data})
+            except Exception as e:
+                st.error(f"MSG Parsing Error: {e}")
 
-                # Display Attachment Metrics UI Grid
-                if valid_attachments:
-                    st.info(f"🔍 Found total {len(valid_attachments)} actionable document attachment(s) inside this email.")
+        # --- CASE 2: IF USER UPLOADS EML FILE DIRECTLY ---
+        elif uploaded_eml is not None:
+            try:
+                with st.spinner("Parsing standard EML message vectors..."):
+                    eml_content = uploaded_eml.read()
+                    msg_eml = message_from_bytes(eml_content)
                     
-                    # Create a clean DataFrame Grid to show user what files exist
-                    att_df = pd.DataFrame(valid_attachments)[["name", "type"]]
-                    att_df.columns = ["File Name", "Document Type"]
-                    st.dataframe(att_df, use_container_width=True)
-                else:
-                    st.warning("⚠️ No valid structural document attachments (.pdf/.docx) detected inside this email structure.")
-
-                st.markdown("---")
+                    email_from = msg_eml.get('From', 'Unknown Sender')
+                    email_to = msg_eml.get('To', 'Unknown Receiver')
+                    email_subject = msg_eml.get('Subject', 'No Subject')
+                    email_date = msg_eml.get('Date', formatdate(localtime=True))
+                    base_name = uploaded_eml.name.split('.')[0]
+                    
+                    # Extract EML body content safely
+                    if msg_eml.is_multipart():
+                        for part in msg_eml.walk():
+                            content_type = part.get_content_type()
+                            content_disp = str(part.get("Content-Disposition"))
+                            
+                            # Extract Text body
+                            if content_type == "text/plain" and "attachment" not in content_disp:
+                                try:
+                                    email_body_text += part.get_payload(decode=True).decode(part.get_content_charset() or 'utf-8', errors='ignore')
+                                except:
+                                    pass
+                            # Extract Attachments from EML parts
+                            elif "attachment" in content_disp or part.get_filename():
+                                f_name = part.get_filename()
+                                if f_name:
+                                    # Handle email naming encodes if any
+                                    from email.header import decode_header
+                                    decoded_name = decode_header(f_name)[0][0]
+                                    if isinstance(decoded_name, bytes):
+                                        f_name = decoded_name.decode('utf-8', errors='ignore')
+                                        
+                                    ext = f_name.split('.')[-1].lower() if '.' in f_name else ''
+                                    if ext in ['pdf', 'docx']:
+                                        valid_attachments.append({
+                                            "name": f_name, 
+                                            "type": ext.upper(), 
+                                            "raw_data": part.get_payload(decode=True)
+                                        })
+                    else:
+                        email_body_text = msg_eml.get_payload(decode=True).decode(msg_eml.get_content_charset() or 'utf-8', errors='ignore')
                 
-                # --- STEP 3: CONVERT EMAIL BODY & ATTACHMENTS TO PDF BUNDLE ---
-                if st.button("⚙️ Compile Full Email Package (Body + All Attachments) to PDF ZIP", use_container_width=True):
-                    with st.spinner("Executing dynamic PDF rendering algorithms... Please wait..."):
+                st.success(f"✨ Native EML layout verified and parsed successfully: {base_name}")
+            except Exception as e:
+                st.error(f"EML Parsing Error: {e}")
+
+        # --- COMMON PROCESSING DISPLAY AND GENERATOR FOR BOTH CASES ---
+        if uploaded_msg is not None or uploaded_eml is not None:
+            st.markdown("---")
+            st.markdown('<p class="section-header">📁 Attachment Inventory & Metadata Tracker</p>', unsafe_allow_html=True)
+
+            # Display Attachment Metrics UI Grid
+            if valid_attachments:
+                st.info(f"🔍 Found total {len(valid_attachments)} actionable document attachment(s) inside this email context.")
+                att_df = pd.DataFrame(valid_attachments)[["name", "type"]]
+                att_df.columns = ["File Name", "Document Type"]
+                st.dataframe(att_df, use_container_width=True)
+            else:
+                st.warning("⚠️ No valid structural document attachments (.pdf/.docx) detected inside this email structure.")
+
+            st.markdown("---")
+            
+            # COMPILE BUNDLE BUTTON
+            if st.button("⚙️ Compile Full Email Package (Body + All Attachments) to PDF ZIP", use_container_width=True):
+                with st.spinner("Executing dynamic PDF rendering algorithms... Please wait..."):
+                    try:
                         zip_buffer = io.BytesIO()
                         
                         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
@@ -730,17 +801,16 @@ elif page =="MSG Conversion":
                             
                             story = []
                             # Email Metadata Header Block
-                            story.append(Paragraph(f"<b>From:</b> {email_msg['From']}", styles['Normal']))
-                            story.append(Paragraph(f"<b>To:</b> {email_msg['To']}", styles['Normal']))
-                            story.append(Paragraph(f"<b>Subject:</b> {email_msg['Subject']}", styles['Normal']))
-                            story.append(Paragraph(f"<b>Date:</b> {email_msg['Date']}", styles['Normal']))
+                            story.append(Paragraph(f"<b>From:</b> {email_from}", styles['Normal']))
+                            story.append(Paragraph(f"<b>To:</b> {email_to}", styles['Normal']))
+                            story.append(Paragraph(f"<b>Subject:</b> {email_subject}", styles['Normal']))
+                            story.append(Paragraph(f"<b>Date:</b> {email_date}", styles['Normal']))
                             story.append(Spacer(1, 15))
                             story.append(Paragraph("<b>--- EMAIL BODY TEXT ---</b>", styles['Normal']))
                             story.append(Spacer(1, 10))
                             
-                            # Clean and break email lines safely
-                            email_body_raw = msg.body or ""
-                            for line in email_body_raw.split('\n'):
+                            # Clean lines mapping safely
+                            for line in email_body_text.split('\n'):
                                 clean_line = line.strip().replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
                                 if clean_line:
                                     story.append(Paragraph(clean_line, styles['Normal']))
@@ -756,11 +826,11 @@ elif page =="MSG Conversion":
                                 file_ext = att_node['type'].lower()
                                 binary_data = att_node['raw_data']
                                 
-                                # Case I: Attachment is already a PDF (Direct bypass to zip)
+                                # Case I: Attachment is already a PDF
                                 if file_ext == 'pdf':
                                     zip_file.writestr(file_name, binary_data)
                                     
-                                # Case II: Attachment is a Word Document (Universal .docx to PDF execution)
+                                # Case II: Attachment is a Word Document (.docx)
                                 elif file_ext == 'docx':
                                     from docx import Document
                                     word_stream = io.BytesIO(binary_data)
@@ -798,10 +868,8 @@ elif page =="MSG Conversion":
                             mime="application/zip",
                             use_container_width=True
                         )
-
-            except Exception as e:
-                st.error(f"Pipeline Conversion Failed: {e}")
-
+                    except Exception as e:
+                        st.error(f"Bundle Generation Error: {e}")
 elif page == "ARS Check Updation":
     st.markdown('<p class="main-title"> ARS Check Updation</p>', unsafe_allow_html=True)
     st.info("Work in progress... This route is a placeholder for the background verification portal automation.")
