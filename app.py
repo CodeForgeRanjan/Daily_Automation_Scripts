@@ -104,7 +104,7 @@ st.sidebar.markdown('<p class="sidebar-heading">Navigation Menu</p>', unsafe_all
 page = st.sidebar.radio("Go to:", ["Data Upload", "Image And Docs Converted", "MSG Conversion", "ARS Check Updation" ,"About Tool"])
 
 
-if page == "Uber Data Upload":
+if page == "Data Upload":
     st.markdown('<p class="main-title">Data CleanUp Dashboard</p>', unsafe_allow_html=True)
     st.write("Upload your raw CSV file and Pincode Master file to instantly generate clean data.")
 
