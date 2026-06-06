@@ -237,7 +237,7 @@ if page == "Uber Data Upload":
         except Exception as e:
             st.error(f"error encountered during setup: {e}")
             
-    elif uber_file is not None and master_file is None:
+    elif my_file is not None and master_file is None:
         st.info(" Please upload the Pincode Master file to process automatic City & City ID mapping.")
 
 #  IMAGE & DOCS CONVERTED (ZIP + AUTO-ROTATE ENABLED) 
