@@ -119,13 +119,13 @@ if page == "Data Upload":
 
     with col1:
         st.markdown('<p class="section-header">Raw Data Input</p>', unsafe_allow_html=True)
-        uber_file = st.file_uploader("Upload CSV File", type=["csv"], key="my_file", label_visibility="collapsed")
+        my_file = st.file_uploader("Upload CSV File", type=["csv"], key="my_file", label_visibility="collapsed")
 
     with col2:
         st.markdown('<p class="section-header">Pincode Master Database</p>', unsafe_allow_html=True)
         master_file = st.file_uploader("Upload Pincode Master File", type=["xlsx", "xls"], key="master_file", label_visibility="collapsed")
 
-    if uber_file is not None and master_file is not None:
+    if my_file is not None and master_file is not None:
         # Clear button layout with custom style
         st.markdown("---")
         if st.button("Reset System & Clear Cache", use_container_width=True):
