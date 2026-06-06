@@ -5,3 +5,5 @@ Pillow
 python-docx
 reportlab
 rapidfuzz
+extract-msg
+reportlab
