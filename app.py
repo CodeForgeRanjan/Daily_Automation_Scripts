@@ -641,14 +641,12 @@ elif page == "Image And Docs Converted":
                     except Exception as e:
                         st.error(f"Bulk engine failure: {e}")
 
-
 # PLACEHOLDERS FOR FUTURE WORK 
 # elif page == "MSG Conversion":
     # st.markdown('<p class="main-title">Message Conversion Dashboard</p>', unsafe_allow_html=True)
     # st.info("Work in progress...This route will be used for message formatting and log conversion.")
-
 # ----------------- PAGE: MSG CONVERSION TO PDF SUITE -----------------
-    elif page == "MSG Conversion":
+    elif page =="MSG Conversion":
         import extract_msg
         import zipfile
         from email.message import EmailMessage
