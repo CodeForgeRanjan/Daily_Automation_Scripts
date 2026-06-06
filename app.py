@@ -118,7 +118,7 @@ if page == "Uber Data Upload":
     #     uber_file = st.file_uploader("Upload Uber CSV File", type=["csv"], key="uber_file")
 
     with col1:
-        st.markdown('<p class="section-header">Uber Raw Data Input</p>', unsafe_allow_html=True)
+        st.markdown('<p class="section-header">Raw Data Input</p>', unsafe_allow_html=True)
         uber_file = st.file_uploader("Upload CSV File", type=["csv"], key="uber_file", label_visibility="collapsed")
 
     with col2:
