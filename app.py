@@ -54,6 +54,17 @@ def clean_address(text):
     
     text = "".join(ch for ch in str(text).strip() if ch.isprintable())
 
+
+    # --- NEW ADVANCED HYPERLINK / DRIVE LINK REMOVAL LAYER ---
+    # 1. Kisi bhi tarah ki Google Drive, http, https, ya www wali link ko completely saaf karo
+    # Yeh pattern handle karega: http://..., https://..., www...., aur bina protocol ke drive.google.com...
+    url_pattern = r'(https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b[-a-zA-Z0-9()@:%_\+.~#?&//=]*)|(www\.[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b[-a-zA-Z0-9()@:%_\+.~#?&//=]*)|(drive\.google\.com\/[^\s]*)'
+    text = re.sub(url_pattern, '', text, flags=re.IGNORECASE)
+    
+    # 2. Agar link ke aage "Drive link", "Link:", "URL" jaisa text bacha reh jaye, use bhi hatao
+    text = re.sub(r'\b(?:drive\s*link|link|url)[:.-]?\s*_*', '', text, flags=re.IGNORECASE)
+    # ---------------------------------------------------------
+
     # --- NEW ADVANCED MOBILE NUMBER REMOVAL LAYER ---
     # 1. Pehle agar address me 10-digit ka lagatar number hai (ya beech me space/dash hai), use saaf karo
     # Yeh pattern handle karega: 9876543210, 98765-43210, 98765 43210
