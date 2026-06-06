@@ -101,7 +101,7 @@ def remove_illegal_chars(val):
 
 #  SIDEBAR NAVIGATION 
 st.sidebar.markdown('<p class="sidebar-heading">Navigation Menu</p>', unsafe_allow_html=True)
-page = st.sidebar.radio("Go to:", ["Data Upload", "Image And Docs Converted", "MSG Conversion", "ARS Check Updation" ,"About Tool"])
+page = st.sidebar.radio("Go to:", ["Data Upload", "Image And Docs Converted", "MSG Conversion", "ARS Check Updation" ,"I bridge Allocation","About Tool"])
 
 
 if page == "Data Upload":
@@ -572,7 +572,9 @@ elif page == "ARS Check Updation":
     st.markdown('<p class="main-title"> ARS Check Updation</p>', unsafe_allow_html=True)
     st.info("Work in progress... This route is a placeholder for the background verification portal automation.")
 
-
+elif page == "I bridge Allocation":
+    st.markdown('<p class="main-title"> I bridge Allocation</p>', unsafe_allow_html=True)
+    st.info("Work in progress....")
 
 
 elif page == "About Tool":
