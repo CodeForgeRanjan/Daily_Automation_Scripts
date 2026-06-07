@@ -41,6 +41,19 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# --- GLOBAL SHORT NAMES MAPPING DICTIONARY (FIXED ERROR JAD SE KHATAM) ---
+CITY_ALIAS_MAP = {
+    "hyd": "Hyderabad",
+    "blr": "Bangalore",
+    "indb": "Indore",
+    "del": "Delhi",
+    "cal": "Kolkata",
+    "mumbai": "Mumbai",
+    "chn": "Chennai",
+    "pune": "Pune",
+    "ahmd": "Ahmedabad"
+}
+
 # CLEANING FUNCTIONS
 def clean_text_proper(text):
     if pd.isna(text) or str(text).strip() == "": 
@@ -56,7 +69,6 @@ def clean_address(text):
 
 
     # --- NEW ADVANCED HYPERLINK / DRIVE LINK REMOVAL LAYER ---
-    # http://..., https://..., www...., and without protocol drive.google.com...
     url_pattern = r'(https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b[-a-zA-Z0-9()@:%_\+.~#?&//=]*)|(www\.[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b[-a-zA-Z0-9()@:%_\+.~#?&//=]*)|(drive\.google\.com\/[^\s]*)'
     text = re.sub(url_pattern, '', text, flags=re.IGNORECASE)
     
@@ -65,10 +77,8 @@ def clean_address(text):
     
 
     # --- NEW ADVANCED MOBILE NUMBER REMOVAL LAYER 
-    # To handle this type of pattern 9876543210, 98765-43210, 98765 43210
     text = re.sub(r'\b\d{5}[-\s]?\d{5}\b', '', text)
     
-    # If text is also written with the mobile number (E.g. Mobile: 9876543210 ya Mob No- 9876543210)
     unwanted_mobile_patterns = [
         r'mobile\s*no(?:umber)?[:.-]?\s*\d*',
         r'mob(?:ile)?[:.-]?\s*\d*',
@@ -97,7 +107,6 @@ def extract_pin(text):
     
     # Get a list of all 6-digit numbers from the given address
     all_matches = re.findall(r'\d{6}', str(text))
-    
     # If you get matches, always pick the LAST one (index -1)
     return all_matches[-1] if all_matches else ""
 
@@ -263,7 +272,10 @@ if page == "Data Upload":
                 #                 fuzzy_counter += 1
                 #                 break
                             
-                # final['Priority'] = ""                
+                # final['Priority'] = ""          
+
+                # Dynamic help column definition for logging fallback references
+                final['City_Name_Raw'] = df['DISTRICT'].fillna('NA')
 
 # --- ADVANCED SHORT NAMES & INTELLECTUAL DISTRICT RE-CORRECTION LAYER ---
                 fuzzy_counter = 0
@@ -344,14 +356,27 @@ if page == "Data Upload":
 
             st.success("Process Completed Successfully! All Data Compiled.")
 
+            # # Live Metric Cards
+            # m_col1, m_col2, m_col3, = st.columns(3)
+            # with m_col1:
+            #     st.metric(label="Total Input Records", value=f"{len(final)} rows")
+            # with m_col2:
+            #     mapped_pins = final['Pin_Code'].transform(lambda x: 1 if x != '' else 0).sum()
+            #     st.metric(label="Extracted Pincodes", value=f"{mapped_pins} items")
+            # with m_col3:
+            #     st.metric(label="Fallback Swaps (8440)", value=f"{fallback_count} rows")
+
+
             # Live Metric Cards
-            m_col1, m_col2, m_col3 = st.columns(3)
+            m_col1, m_col2, m_col3, m_col4 = st.columns(4)
             with m_col1:
-                st.metric(label="Total Input Records", value=f"{len(final)} rows")
+                st.metric(label="Total Input Records", value=f"{len(final_ui_clean)} rows")
             with m_col2:
-                mapped_pins = final['Pin_Code'].transform(lambda x: 1 if x != '' else 0).sum()
+                mapped_pins = final_ui_clean['Pin_Code'].transform(lambda x: 1 if x != '' else 0).sum()
                 st.metric(label="Extracted Pincodes", value=f"{mapped_pins} items")
             with m_col3:
+                st.metric(label="Fuzzy / City Recovery ✨", value=f"{fuzzy_counter} rows")
+            with m_col4:
                 st.metric(label="Fallback Swaps (8440)", value=f"{fallback_count} rows")
 
 # Show live preview of processed data
