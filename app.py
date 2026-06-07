@@ -370,7 +370,7 @@ if page == "Data Upload":
             # Live Metric Cards
             m_col1, m_col2, m_col3, m_col4 = st.columns(4)
             with m_col1:
-                st.metric(label="Total Input Records", value=f"{len(final_ui_clean)} rows")
+                st.metric(label="Total Input Records", value=f"{len(final)} rows")
             with m_col2:
                 mapped_pins = final_ui_clean['Pin_Code'].transform(lambda x: 1 if x != '' else 0).sum()
                 st.metric(label="Extracted Pincodes", value=f"{mapped_pins} items")
