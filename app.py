@@ -244,92 +244,26 @@ if page == "Data Upload":
 
                 
                 # --- NEW SMART INTELLIGENT FUZZY RE-CORRECTION LAYER ---
-                # fuzzy_counter = 0
-                # # Unique Master references file array targeting
-                # master_district_unique = master_df.drop_duplicates(subset=['DISTRICT'])
-                
-                # for idx, row in final.iterrows():
-                #     # If the Pincode was missing or unreadable, the City ID became 'No'
-                #     if row['City'] == 'NA' or row['City'] == '':
-                #         # Extracting text from an address field and finding the closest match
-                #         address_str = str(row['Complete_Address'])
-                        
-                #         # Master unique directory 
-                #         for m_dist in master_district_unique['DISTRICT'].dropna().astype(str):
-                #             if m_dist.lower() in address_str.lower():
-                #                 #Direct string keyword match hit!
-                #                 matched_row = master_district_unique[master_district_unique['DISTRICT'] == m_dist]
-                #                 final.at[idx, 'City'] = format_id(matched_row.iloc[0]['City ID/District ID'])
-                #                 fuzzy_counter += 1
-                #                 break
-                            
-
-                # final['Priority'] = ""
-# --- ADVANCED SHORT NAMES & INTELLECTUAL DISTRICT RE-CORRECTION LAYER ---
                 fuzzy_counter = 0
-                
-                # Master file se duplicate districts hata kar ek saaf directory banana
-                # Column B (PIN CODE), Column C (DISTRICT), Column E (City ID/District ID) ke hisab se mapping
-                master_district_unique = master_df.drop_duplicates(subset=['DISTRICT']).copy()
+                # Unique Master references file array targeting
+                master_district_unique = master_df.drop_duplicates(subset=['DISTRICT'])
                 
                 for idx, row in final.iterrows():
-                    # Agar pincode ya strict initial lookup se City ID 'NA' ya khali mili hai
+                    # If the Pincode was missing or unreadable, the City ID became 'No'
                     if row['City'] == 'NA' or row['City'] == '':
-                        address_str = str(row['Complete_Address']).lower()
-                        detected_target = None
+                        # Extracting text from an address field and finding the closest match
+                        address_str = str(row['Complete_Address'])
                         
-                        # STEP 1: Special handling for Delhi variations (South, North, New, Central Delhi)
-                        # Agar address me kisi bhi tarah ka Delhi word maujood hai
-                        if "delhi" in address_str:
-                            if "south delhi" in address_str:
-                                detected_target = "South Delhi"
-                            elif "north delhi" in address_str:
-                                detected_target = "North Delhi"
-                            elif "new delhi" in address_str:
-                                detected_target = "New Delhi"
-                            elif "west delhi" in address_str:
-                                detected_target = "West Delhi"
-                            elif "east delhi" in address_str:
-                                detected_target = "East Delhi"
-                            else:
-                                detected_target = "Delhi"
-                        
-                        # STEP 2: Agar Delhi nahi hai, toh baaki short names check karo (Hyd, Blr, Indb)
-                        if not detected_target:
-                            address_words = re.findall(r'\b\w+\b', address_str)
-                            for short_alias, full_name in CITY_ALIAS_MAP.items():
-                                if short_alias in address_words:
-                                    detected_target = full_name
-                                    break
-                        
-                        # STEP 3: Agar upar dono fail ho jayein, toh Master Sheet ke baaki unique District names se check karo
-                        if not detected_target:
-                            for m_dist in master_district_unique['DISTRICT'].dropna().astype(str):
-                                # Word boundary check taaki partial word match na ho (E.g., "indore" in address)
-                                if re.search(r'\b' + re.escape(m_dist.lower()) + r'\b', address_str):
-                                    detected_target = m_dist
-                                    break
-                                    
-                        # STEP 4: Agar target district identify ho gaya, toh uski unique City ID map karo
-                        if detected_target:
-                            # Master file se us matched district ki row filter karna
-                            matched_rows = master_df[master_df['DISTRICT'].astype(str).str.lower() == detected_target.lower()]
-                            
-                            if not matched_rows.empty:
-                                # Pincode bhale hi alag ho, hum pehli valid row se us District ki unique City ID utha lenge
-                                target_city_id = format_id(matched_rows.iloc[0]['City ID/District ID'])
-                                target_district_name = matched_rows.iloc[0]['DISTRICT']
-                                
-                                final.at[idx, 'City'] = target_city_id
-                                final.at[idx, 'City_Name_Raw'] = target_district_name
+                        # Master unique directory 
+                        for m_dist in master_district_unique['DISTRICT'].dropna().astype(str):
+                            if m_dist.lower() in address_str.lower():
+                                #Direct string keyword match hit!
+                                matched_row = master_district_unique[master_district_unique['DISTRICT'] == m_dist]
+                                final.at[idx, 'City'] = format_id(matched_row.iloc[0]['City ID/District ID'])
                                 fuzzy_counter += 1
-                                
-                                # STEP 5: Pincode Auto-Fill (Agar pincode blank tha, toh us district ka pehla default pincode daal do)
-                                if row['Pin_Code'] == '' or pd.isna(row['Pin_Code']) or row['Pin_Code'] == 'NA':
-                                    final.at[idx, 'Pin_Code'] = str(matched_rows.iloc[0]['PIN CODE'])
-
-                final['Priority'] = ""
-                
+                                break
+                            
+                final['Priority'] = ""                
                 
                 #  Pin Code Fallback 
                 # missing_mask = (final['City'] == 'NA') & ((final['Pin_Code'] == '') | (final['Pin_Code'].isna()))
