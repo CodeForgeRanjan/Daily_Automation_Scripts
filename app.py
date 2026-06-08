@@ -972,36 +972,28 @@ elif page == "I bridge Allocation":
 
         if uploaded_alloc_file is not None:
             try:
-                # with st.spinner("Analyzing data streams and mapping core matrices..."):
-                #     # Load File based on extension safely
-                #     if uploaded_alloc_file.name.endswith('.csv'):
-                #         df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1")
-                #     else:
-                #         df_alloc = pd.read_excel(uploaded_alloc_file)
-                
                 with st.spinner("Analyzing data streams and mapping core matrices..."):
-                    # --- UPGRADED ROBUST FILE LOADING LAYER ---
+                    # --- DYNAMIC AUTO-DETECTING FILE LOADING LAYER ---
                     if uploaded_alloc_file.name.endswith('.csv'):
                         try:
-                            # Pehle standard read try karna with bad lines skipping parameter
-                            df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", on_bad_lines='skip')
+                            # sep=None aur engine='python' automatic delimiter (comma, tab, semicolon) pehchan leta hai
+                            df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", sep=None, engine='python', on_bad_lines='skip')
                         except Exception:
-                            # Separate fall-back byte stream pointer tracking if strict parsing breaks
                             uploaded_alloc_file.seek(0)
-                            # Agar file me upar 4-5 lines ka kachra header hai, toh unhe skip karke data nikalna
-                            df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", skiprows=4, on_bad_lines='skip')
+                            # Backup agar top par metadata headers ho
+                            df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", skiprows=4, sep=None, engine='python', on_bad_lines='skip')
                     else:
                         df_alloc = pd.read_excel(uploaded_alloc_file)
                     
                     # Clean column names for case sensitivity issues
                     df_alloc.columns = df_alloc.columns.str.strip()
                     
-                    # Check karna ki parsing ke baad columns sahi mile ya nahi
+                    # Agar abhi bhi single block bache, toh tabs filter bypass lagao
                     if len(df_alloc.columns) <= 1:
-                        # Fallback logic agar kachra skip karne ke baad bhi single block bacha ho
-                        st.error("❌ File parsing layout mismatched! Please check if the exported CSV has clean tabular structures.")
-                        st.stop()
-                    # -------------------------------------------
+                        uploaded_alloc_file.seek(0)
+                        df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", sep='\t', on_bad_lines='skip')
+                        # df_alloc.columns = df_alloc.columns.str.strip()
+                    # -------------------------------------------------
                     
                     # Clean column names for case sensitivity issues
                     df_alloc.columns = df_alloc.columns.str.strip()
