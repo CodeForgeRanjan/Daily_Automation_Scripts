@@ -972,12 +972,36 @@ elif page == "I bridge Allocation":
 
         if uploaded_alloc_file is not None:
             try:
+                # with st.spinner("Analyzing data streams and mapping core matrices..."):
+                #     # Load File based on extension safely
+                #     if uploaded_alloc_file.name.endswith('.csv'):
+                #         df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1")
+                #     else:
+                #         df_alloc = pd.read_excel(uploaded_alloc_file)
+                
                 with st.spinner("Analyzing data streams and mapping core matrices..."):
-                    # Load File based on extension safely
+                    # --- UPGRADED ROBUST FILE LOADING LAYER ---
                     if uploaded_alloc_file.name.endswith('.csv'):
-                        df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1")
+                        try:
+                            # Pehle standard read try karna with bad lines skipping parameter
+                            df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", on_bad_lines='skip')
+                        except Exception:
+                            # Separate fall-back byte stream pointer tracking if strict parsing breaks
+                            uploaded_alloc_file.seek(0)
+                            # Agar file me upar 4-5 lines ka kachra header hai, toh unhe skip karke data nikalna
+                            df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", skiprows=4, on_bad_lines='skip')
                     else:
                         df_alloc = pd.read_excel(uploaded_alloc_file)
+                    
+                    # Clean column names for case sensitivity issues
+                    df_alloc.columns = df_alloc.columns.str.strip()
+                    
+                    # Check karna ki parsing ke baad columns sahi mile ya nahi
+                    if len(df_alloc.columns) <= 1:
+                        # Fallback logic agar kachra skip karne ke baad bhi single block bacha ho
+                        st.error("❌ File parsing layout mismatched! Please check if the exported CSV has clean tabular structures.")
+                        st.stop()
+                    # -------------------------------------------
                     
                     # Clean column names for case sensitivity issues
                     df_alloc.columns = df_alloc.columns.str.strip()
