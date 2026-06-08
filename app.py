@@ -965,7 +965,7 @@ elif page == "I bridge Allocation":
         import openpyxl
         
         st.markdown('<p class="main-title">⚡ Intelligent I-Bridge Workload Allocator</p>', unsafe_allow_html=True)
-        st.write("Upload your raw data file to instantly clean duplicates, filter out restricted series, sort by Ageing Hours, and allocate files to your team.")
+        st.write("Upload your raw data file to instantly clean duplicates, filter restricted series, and generate a dual-sheet allocation tracker.")
 
         # File Uploader supporting both CSV and Excel format
         uploaded_alloc_file = st.file_uploader("Upload Queue Data File (.csv, .xlsx)", type=["csv", "xlsx", "xls"], key="alloc_file_uploader")
@@ -982,11 +982,11 @@ elif page == "I bridge Allocation":
                     # Clean column names for case sensitivity issues
                     df_alloc.columns = df_alloc.columns.str.strip()
                     
-                    # Dynamic Column Identification (Fallback to index if exact names aren't matched)
+                    # Dynamic Column Identification (Column C is ARS No, Column J is Ageing_Hour)
                     ars_col = 'ARS No' if 'ARS No' in df_alloc.columns else df_alloc.columns[2]
                     ageing_col = 'Ageing_Hour' if 'Ageing_Hour' in df_alloc.columns else df_alloc.columns[9]
                     
-                    # 1. REMOVE DUPLICATED ARS NUMBERS (Only pick 1 out of multiple repeats)
+                    # 1. REMOVE DUPLICATED ARS NUMBERS (Strict rule: pick only 1 out of multiple repeats)
                     initial_count = len(df_alloc)
                     df_alloc = df_alloc.dropna(subset=[ars_col])
                     df_alloc = df_alloc.drop_duplicates(subset=[ars_col])
@@ -1018,12 +1018,10 @@ elif page == "I bridge Allocation":
 
                 st.markdown("---")
                 st.markdown('<p class="section-header">👥 Team Workload Allocation Settings (5 Slots)</p>', unsafe_allow_html=True)
-                st.info("Enter the User Names and the number of cases you want to allocate to each slot below.")
+                st.info("Enter the User Names and the number of cases you want to allocate to each slot.")
 
-                # Creating 5 input slots using custom structural layout matrices
+                # Input Slots configuration
                 user_allocations = []
-                
-                # Dynamic loop to generate 5 precise input rows
                 for idx in range(1, 6):
                     col_name, col_count = st.columns([3, 2])
                     with col_name:
@@ -1044,45 +1042,66 @@ elif page == "I bridge Allocation":
                         total_requested_allocation = sum(item['count'] for item in user_allocations)
                         
                         if total_requested_allocation > total_available_rows:
-                            st.error(f"❌ Allocation Limit Exceeded! You requested total {total_requested_allocation} cases, but only {total_available_rows} cases are available in the cleaned queue.")
+                            st.error(f"❌ Allocation Limit Exceeded! You requested total {total_requested_allocation} cases, but only {total_available_rows} cases are available.")
                         else:
-                            with st.spinner("Slicing data queues and generating master allocation matrix..."):
+                            with st.spinner("Slicing data queues and generating dual-sheet tracker framework..."):
                                 current_pointer = 0
                                 allocated_chunks = []
+                                tracker_rows = []
                                 
                                 # Process slicing logic over data rows array
                                 for alloc in user_allocations:
                                     name = alloc['name']
                                     count = alloc['count']
                                     
-                                    # Extrct the exact slice block for this user
+                                    # Extract the exact slice block for this user
                                     sub_df = df_filtered.iloc[current_pointer : current_pointer + count].copy()
                                     
-                                    # Inject the assignment column at index 0 for perfect visibility
-                                    sub_df.insert(0, 'Allocated User Name', name)
-                                    allocated_chunks.append(sub_df)
+                                    # Create a clean DataFrame with ONLY Allocated User Name and ARS No
+                                    clean_sub_df = pd.DataFrame()
+                                    clean_sub_df['Allocated User Name'] = [name] * len(sub_df)
+                                    clean_sub_df['ARS No'] = sub_df[ars_col].values
+                                    
+                                    allocated_chunks.append(clean_sub_df)
+                                    
+                                    # Tracking Summary row block append
+                                    tracker_rows.append({
+                                        "Allocated User Name": name,
+                                        "Allocated Case Count": count
+                                    })
                                     
                                     # Move pointer forward
                                     current_pointer += count
                                 
-                                # Consolidate into a single layout dataframe structure
+                                # Consolidate Main Allocation Data List
                                 final_allocation_df = pd.concat(allocated_chunks, ignore_index=True)
                                 
-                                st.success(f"🎉 Allocation Matrix Compiled successfully! Distributed {total_requested_allocation} cases among {len(user_allocations)} team members.")
+                                # Create Summary Tracking DataFrame
+                                final_tracker_df = pd.DataFrame(tracker_rows)
                                 
-                                # Show preview of assigned breakdown configuration
-                                st.markdown('<p class="section-header">🔍 Live Allocation Allocation Preview (Top 5 Rows)</p>', unsafe_allow_html=True)
+                                st.success(f"🎉 Process Completed! Distributed {total_requested_allocation} cases among {len(user_allocations)} team members.")
+                                
+                                # UI Summary Record Display (Taaki baar baar filter na karna pade)
+                                st.markdown('<p class="section-header">📈 Live Allocation Summary Record</p>', unsafe_allow_html=True)
+                                st.dataframe(final_tracker_df, use_container_width=True)
+                                
+                                # Show preview of assigned breakdown configurations
+                                st.markdown('<p class="section-header">🔍 Data Output Preview (Top 5 Rows)</p>', unsafe_allow_html=True)
                                 st.dataframe(final_allocation_df.head(5), use_container_width=True)
                                 
-                                # Create an in-memory excel stream using openpyxl engine array
+                                # Create an in-memory excel stream with DUAL SHEETS using openpyxl
                                 excel_buffer = io.BytesIO()
                                 with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
-                                    final_allocation_df.to_excel(writer, index=False, sheet_name='I-Bridge Allocation List')
+                                    # Sheet 1: Just User Name and ARS No
+                                    final_allocation_df.to_excel(writer, index=False, sheet_name='Allocation_List')
+                                    # Sheet 2: The static verification tracker counts record
+                                    final_tracker_df.to_excel(writer, index=False, sheet_name='Allocation_Tracker')
+                                    
                                 excel_output = excel_buffer.getvalue()
                                 
                                 # Download button for compiled sheet
                                 st.download_button(
-                                    label="📥 Download Allocated XLSX File",
+                                    label="📥 Download Allocated XLSX File (Dual Sheets Loaded)",
                                     data=excel_output,
                                     file_name="I_Bridge_Workload_Allocation.xlsx",
                                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1091,7 +1110,6 @@ elif page == "I bridge Allocation":
 
             except Exception as e:
                 st.error(f"Allocation Engine Failed: {e}")
-
 
 elif page == "About Tool":
     st.markdown('<p class="main-title"> About Automation Utility Tool</p>', unsafe_allow_html=True)
