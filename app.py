@@ -960,9 +960,137 @@ elif page == "ARS Check Updation":
     st.markdown('<p class="main-title"> ARS Check Updation</p>', unsafe_allow_html=True)
     st.info("Work in progress... This route is a placeholder for the background verification portal automation.")
 
-elif page == "I bridge Allocation":
-    st.markdown('<p class="main-title"> I bridge Allocation</p>', unsafe_allow_html=True)
-    st.info("Work in progress....")
+# ----------------- PAGE: I BRIDGE ALLOCATION SUITE -----------------
+    elif page == "I bridge Allocation":
+        import openpyxl
+        
+        st.markdown('<p class="main-title">⚡ Intelligent I-Bridge Workload Allocator</p>', unsafe_allow_html=True)
+        st.write("Upload your raw data file to instantly clean duplicates, filter out restricted series, sort by Ageing Hours, and allocate files to your team.")
+
+        # File Uploader supporting both CSV and Excel format
+        uploaded_alloc_file = st.file_uploader("Upload Queue Data File (.csv, .xlsx)", type=["csv", "xlsx", "xls"], key="alloc_file_uploader")
+
+        if uploaded_alloc_file is not None:
+            try:
+                with st.spinner("Analyzing data streams and mapping core matrices..."):
+                    # Load File based on extension safely
+                    if uploaded_alloc_file.name.endswith('.csv'):
+                        df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1")
+                    else:
+                        df_alloc = pd.read_excel(uploaded_alloc_file)
+                    
+                    # Clean column names for case sensitivity issues
+                    df_alloc.columns = df_alloc.columns.str.strip()
+                    
+                    # Dynamic Column Identification (Fallback to index if exact names aren't matched)
+                    ars_col = 'ARS No' if 'ARS No' in df_alloc.columns else df_alloc.columns[2]
+                    ageing_col = 'Ageing_Hour' if 'Ageing_Hour' in df_alloc.columns else df_alloc.columns[9]
+                    
+                    # 1. REMOVE DUPLICATED ARS NUMBERS (Only pick 1 out of multiple repeats)
+                    initial_count = len(df_alloc)
+                    df_alloc = df_alloc.dropna(subset=[ars_col])
+                    df_alloc = df_alloc.drop_duplicates(subset=[ars_col])
+                    dedup_count = initial_count - len(df_alloc)
+                    
+                    # 2. HARD FILTER: Exclude ARS numbers starting with '2304'
+                    df_alloc[ars_col] = df_alloc[ars_col].astype(str).str.strip()
+                    df_filtered = df_alloc[~df_alloc[ars_col].str.startswith('2304')].copy()
+                    excluded_2304_count = len(df_alloc) - len(df_filtered)
+                    
+                    # 3. SORT BY AGEING HOUR (Highest ageing hours first for SLA safety)
+                    if ageing_col in df_filtered.columns:
+                        df_filtered[ageing_col] = pd.to_numeric(df_filtered[ageing_col], errors='coerce').fillna(0)
+                        df_filtered = df_filtered.sort_values(by=ageing_col, ascending=False).reset_index(drop=True)
+                    else:
+                        df_filtered = df_filtered.reset_index(drop=True)
+                        
+                    total_available_rows = len(df_filtered)
+
+                # Show Live Queue Analytics Cards
+                st.markdown('<p class="section-header">📊 Cleaned Queue Analytics</p>', unsafe_allow_html=True)
+                stat_col1, stat_col2, stat_col3 = st.columns(3)
+                with stat_col1:
+                    st.metric(label="Total Cases Available for Allocation", value=f"{total_available_rows} rows")
+                with stat_col2:
+                    st.metric(label="Duplicate Repeats Cleaned 🚫", value=f"{dedup_count} items")
+                with stat_col3:
+                    st.metric(label="2304 Series Blocked 🛡️", value=f"{excluded_2304_count} rows")
+
+                st.markdown("---")
+                st.markdown('<p class="section-header">👥 Team Workload Allocation Settings (5 Slots)</p>', unsafe_allow_html=True)
+                st.info("Enter the User Names and the number of cases you want to allocate to each slot below.")
+
+                # Creating 5 input slots using custom structural layout matrices
+                user_allocations = []
+                
+                # Dynamic loop to generate 5 precise input rows
+                for idx in range(1, 6):
+                    col_name, col_count = st.columns([3, 2])
+                    with col_name:
+                        u_name = st.text_input(f"Slot {idx}: User Name", key=f"u_name_{idx}", placeholder=f"Enter name for user {idx}...")
+                    with col_count:
+                        u_count = st.number_input(f"Slot {idx}: No. of Cases", min_value=0, max_value=total_available_rows, step=1, key=f"u_count_{idx}")
+                    
+                    if u_name.strip() != "" and u_count > 0:
+                        user_allocations.append({"name": u_name.strip(), "count": int(u_count)})
+
+                st.markdown("---")
+
+                # TRIGGER ALLOCATION PROCESSING PIPELINE
+                if st.button("⚡ Process Workload Allocation & Compile XLSX", use_container_width=True):
+                    if not user_allocations:
+                        st.warning("⚠️ Please fill at least one User Name and a valid case count greater than 0 to allocate data!")
+                    else:
+                        total_requested_allocation = sum(item['count'] for item in user_allocations)
+                        
+                        if total_requested_allocation > total_available_rows:
+                            st.error(f"❌ Allocation Limit Exceeded! You requested total {total_requested_allocation} cases, but only {total_available_rows} cases are available in the cleaned queue.")
+                        else:
+                            with st.spinner("Slicing data queues and generating master allocation matrix..."):
+                                current_pointer = 0
+                                allocated_chunks = []
+                                
+                                # Process slicing logic over data rows array
+                                for alloc in user_allocations:
+                                    name = alloc['name']
+                                    count = alloc['count']
+                                    
+                                    # Extrct the exact slice block for this user
+                                    sub_df = df_filtered.iloc[current_pointer : current_pointer + count].copy()
+                                    
+                                    # Inject the assignment column at index 0 for perfect visibility
+                                    sub_df.insert(0, 'Allocated User Name', name)
+                                    allocated_chunks.append(sub_df)
+                                    
+                                    # Move pointer forward
+                                    current_pointer += count
+                                
+                                # Consolidate into a single layout dataframe structure
+                                final_allocation_df = pd.concat(allocated_chunks, ignore_index=True)
+                                
+                                st.success(f"🎉 Allocation Matrix Compiled successfully! Distributed {total_requested_allocation} cases among {len(user_allocations)} team members.")
+                                
+                                # Show preview of assigned breakdown configuration
+                                st.markdown('<p class="section-header">🔍 Live Allocation Allocation Preview (Top 5 Rows)</p>', unsafe_allow_html=True)
+                                st.dataframe(final_allocation_df.head(5), use_container_width=True)
+                                
+                                # Create an in-memory excel stream using openpyxl engine array
+                                excel_buffer = io.BytesIO()
+                                with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+                                    final_allocation_df.to_excel(writer, index=False, sheet_name='I-Bridge Allocation List')
+                                excel_output = excel_buffer.getvalue()
+                                
+                                # Download button for compiled sheet
+                                st.download_button(
+                                    label="📥 Download Allocated XLSX File",
+                                    data=excel_output,
+                                    file_name="I_Bridge_Workload_Allocation.xlsx",
+                                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                    use_container_width=True
+                                )
+
+            except Exception as e:
+                st.error(f"Allocation Engine Failed: {e}")
 
 
 elif page == "About Tool":
