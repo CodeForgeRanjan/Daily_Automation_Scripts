@@ -961,7 +961,7 @@ elif page == "ARS Check Updation":
     st.info("Work in progress... This route is a placeholder for the background verification portal automation.")
 
 # ----------------- PAGE: I BRIDGE ALLOCATION SUITE -----------------
-    elif page == "I bridge Allocation":
+elif page == "I bridge Allocation":
         import openpyxl
         
         st.markdown('<p class="main-title">⚡ Intelligent I-Bridge Workload Allocator</p>', unsafe_allow_html=True)
