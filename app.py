@@ -176,10 +176,6 @@ if page == "Data Upload":
     st.info("Welcome! Please upload both required files below to trigger the automated data cleaning pipeline.")
 
     col1, col2 = st.columns(2)
-    
-    # with col1:
-    #     st.subheader("1. Uber Raw Data")
-    #     uber_file = st.file_uploader("Upload Uber CSV File", type=["csv"], key="uber_file")
 
     with col1:
         st.markdown('<p class="section-header">Raw Data Input</p>', unsafe_allow_html=True)
@@ -249,62 +245,38 @@ if page == "Data Upload":
                 if 'City ID/District ID' in df.columns:
                     final['City'] = df['City ID/District ID'].apply(format_id)
                 else:
-                    final['City'] = "NA"
-
-                
-                # --- NEW SMART INTELLIGENT FUZZY RE-CORRECTION LAYER ---
-                # fuzzy_counter = 0
-                # # Unique Master references file array targeting
-                # master_district_unique = master_df.drop_duplicates(subset=['DISTRICT'])
-                
-                # for idx, row in final.iterrows():
-                #     # If the Pincode was missing or unreadable, the City ID became 'No'
-                #     if row['City'] == 'NA' or row['City'] == '':
-                #         # Extracting text from an address field and finding the closest match
-                #         address_str = str(row['Complete_Address'])
-                        
-                #         # Master unique directory 
-                #         for m_dist in master_district_unique['DISTRICT'].dropna().astype(str):
-                #             if m_dist.lower() in address_str.lower():
-                #                 #Direct string keyword match hit!
-                #                 matched_row = master_district_unique[master_district_unique['DISTRICT'] == m_dist]
-                #                 final.at[idx, 'City'] = format_id(matched_row.iloc[0]['City ID/District ID'])
-                #                 fuzzy_counter += 1
-                #                 break
-                            
-                # final['Priority'] = ""          
+                    final['City'] = "NA"       
 
                 # Dynamic help column definition for logging fallback references
                 final['City_Name_Raw'] = df['DISTRICT'].fillna('NA')
 
 # --- ADVANCED SHORT NAMES & INTELLECTUAL DISTRICT RE-CORRECTION LAYER ---
                 fuzzy_counter = 0
-                
-                # Master file se duplicate districts hata kar ek saaf reference directory banana
+                # Remove duplicate districts and update a clean reference directory
                 master_district_unique = master_df.drop_duplicates(subset=['DISTRICT']).copy()
                 
                 for idx, row in final.iterrows():
-                    # Agar pincode missing tha ya strict initial lookup se City ID 'NA' mili hai
+                    # If pincode is missing initial lookup City ID 'NA'
                     if row['City'] == 'NA' or row['City'] == '' or pd.isna(row['City']):
                         address_str = str(row['Complete_Address']).lower()
                         detected_target = None
                         
-                        # STEP 1: Special handling for Delhi variations (South, North, New, Central, West, East)
-                        if "delhi" in address_str:
-                            if "south delhi" in address_str:
-                                detected_target = "South Delhi"
-                            elif "north delhi" in address_str:
-                                detected_target = "North Delhi"
-                            elif "new delhi" in address_str:
-                                detected_target = "New Delhi"
-                            elif "west delhi" in address_str:
-                                detected_target = "West Delhi"
-                            elif "east delhi" in address_str:
-                                detected_target = "East Delhi"
-                            else:
-                                detected_target = "Delhi"
+                        # # Special handling for Delhi variations (South, North, New, Central, West, East)
+                        # if "delhi" in address_str:
+                        #     if "south delhi" in address_str:
+                        #         detected_target = "South Delhi"
+                        #     elif "north delhi" in address_str:
+                        #         detected_target = "North Delhi"
+                        #     elif "new delhi" in address_str:
+                        #         detected_target = "New Delhi"
+                        #     elif "west delhi" in address_str:
+                        #         detected_target = "West Delhi"
+                        #     elif "east delhi" in address_str:
+                        #         detected_target = "East Delhi"
+                        #     else:
+                        #         detected_target = "Delhi"
                         
-                        # STEP 2: Short names mapping (Hyd, Blr, Indb, etc.)
+                        # Short names mapping (Hyd, Blr, Indb, etc.)
                         if not detected_target:
                             address_words = re.findall(r'\b\w+\b', address_str)
                             for short_alias, full_name in CITY_ALIAS_MAP.items():
@@ -312,20 +284,20 @@ if page == "Data Upload":
                                     detected_target = full_name
                                     break
                         
-                        # STEP 3: Master Sheet ke standard unique District names se strict word match check karna
+                        # To match District names for Master Sheet
                         if not detected_target:
                             for m_dist in master_district_unique['DISTRICT'].dropna().astype(str):
                                 if re.search(r'\b' + re.escape(m_dist.lower()) + r'\b', address_str):
                                     detected_target = m_dist
                                     break
-                                    
-                        # STEP 4: Agar address ke city name se target identify ho gaya, toh mapping lagao
+                    
+                        # If the target is identified by the city name of the address, apply the mapping
                         if detected_target:
-                            # Master file se us matched district ki saari rows filter karna (Column C match)
+                            # Filter all rows of that matched district from master file (column match)
                             matched_rows = master_df[master_df['DISTRICT'].astype(str).str.lower() == detected_target.lower()]
                             
                             if not matched_rows.empty:
-                                # A. City ID update karna (Column E se)
+                                # City ID update (Column E)
                                 target_city_id = format_id(matched_rows.iloc[0]['City ID/District ID'])
                                 target_district_name = matched_rows.iloc[0]['DISTRICT']
                                 
@@ -333,18 +305,14 @@ if page == "Data Upload":
                                 final.at[idx, 'City_Name_Raw'] = target_district_name
                                 fuzzy_counter += 1
                                 
-                                # B. Pincode Recovery: Agar pincode khali ya 'NA' hai, toh master file se is city ka code daal do (Column B se)
+                                    # Pincode Recovery: If Pincode is blank or 'NA', then enter the code of this city from the master file (from column B)
                                 current_pin = str(final.at[idx, 'Pin_Code']).strip()
                                 if current_pin == '' or current_pin == 'NA' or pd.isna(final.at[idx, 'Pin_Code']):
-                                    # Master sheet se us district ka pehla valid PIN CODE uthana
+                                    # Pick up the first valid pin code of that district from the master sheet
                                     recovered_pin = str(matched_rows.iloc[0]['PIN CODE']).strip()
                                     final.at[idx, 'Pin_Code'] = recovered_pin
 
                 final['Priority'] = ""
-                
-                #  Pin Code Fallback 
-                # missing_mask = (final['City'] == 'NA') & ((final['Pin_Code'] == '') | (final['Pin_Code'].isna()))
-                # final.loc[missing_mask, 'City'] = '8440'
 
                 # Pin Code Fallback Logic
                 missing_mask = (final['City'] == 'NA') & ((final['Pin_Code'] == '') | (final['Pin_Code'].isna()))
@@ -356,17 +324,6 @@ if page == "Data Upload":
 
             st.success("Process Completed Successfully! All Data Compiled.")
 
-            # # Live Metric Cards
-            # m_col1, m_col2, m_col3, = st.columns(3)
-            # with m_col1:
-            #     st.metric(label="Total Input Records", value=f"{len(final)} rows")
-            # with m_col2:
-            #     mapped_pins = final['Pin_Code'].transform(lambda x: 1 if x != '' else 0).sum()
-            #     st.metric(label="Extracted Pincodes", value=f"{mapped_pins} items")
-            # with m_col3:
-            #     st.metric(label="Fallback Swaps (8440)", value=f"{fallback_count} rows")
-
-
             # Live Metric Cards
             m_col1, m_col2, m_col3, m_col4 = st.columns(4)
             with m_col1:
@@ -375,17 +332,13 @@ if page == "Data Upload":
                 mapped_pins = final['Pin_Code'].transform(lambda x: 1 if x != '' else 0).sum()
                 st.metric(label="Extracted Pincodes", value=f"{mapped_pins} items")
             with m_col3:
-                st.metric(label="Fuzzy / City Recovery ✨", value=f"{fuzzy_counter} rows")
+                st.metric(label="Fuzzy / City Recovery", value=f"{fuzzy_counter} rows")
             with m_col4:
                 st.metric(label="Fallback Swaps (8440)", value=f"{fallback_count} rows")
 
 # Show live preview of processed data
             st.markdown('<p class="section-header">Live Processed Preview (Top 5 Rows)</p>', unsafe_allow_html=True)
             st.dataframe(final.head(5), use_container_width=True)
-    
-            # # Show live preview of processed data
-            # st.subheader("Preview of Processed Output (Top 5 Rows)")
-            # st.dataframe(final.head(5))
 
             # setup for CSV stable download
             csv_buffer = io.StringIO()
@@ -728,10 +681,6 @@ elif page == "Image And Docs Converted":
                     except Exception as e:
                         st.error(f"Bulk engine failure: {e}")
 
-# PLACEHOLDERS FOR FUTURE WORK 
-# elif page == "MSG Conversion":
-    # st.markdown('<p class="main-title">Message Conversion Dashboard</p>', unsafe_allow_html=True)
-    # st.info("Work in progress...This route will be used for message formatting and log conversion.")
 # ----------------- PAGE: MSG & EML CONVERSION TO PDF SUITE -----------------
 elif page == "MSG Conversion":
         import extract_msg
@@ -786,11 +735,11 @@ elif page == "MSG Conversion":
                     email_msg_obj.set_content(email_body_text)
                     eml_bytes = email_msg_obj.as_bytes()
                 
-                st.toast(f"🎉 EML Conversion Successful for: {base_name}", icon="🚀")
-                st.success("✨ Outlook Message file compiled to EML standards successfully!")
+                st.toast(f"EML Conversion Successful for: {base_name}",)
+                st.success("Outlook Message file compiled to EML standards successfully!")
                 
                 st.download_button(
-                    label="📥 Download Converted EML File",
+                    label="Download Converted EML File",
                     data=eml_bytes,
                     file_name=f"{base_name}.eml",
                     mime="message/rfc822",
@@ -808,7 +757,7 @@ elif page == "MSG Conversion":
             except Exception as e:
                 st.error(f"MSG Parsing Error: {e}")
 
-        # --- CASE 2: IF USER UPLOADS EML FILE DIRECTLY ---
+        # --- IF USER UPLOADS EML FILE DIRECTLY ---
         elif uploaded_eml is not None:
             try:
                 with st.spinner("Parsing standard EML message vectors..."):
@@ -860,7 +809,7 @@ elif page == "MSG Conversion":
         # --- COMMON PROCESSING DISPLAY AND GENERATOR FOR BOTH CASES ---
         if uploaded_msg is not None or uploaded_eml is not None:
             st.markdown("---")
-            st.markdown('<p class="section-header">📁 Attachment Inventory & Metadata Tracker</p>', unsafe_allow_html=True)
+            st.markdown('<p class="section-header">Attachment Inventory & Metadata Tracker</p>', unsafe_allow_html=True)
 
             # Display Attachment Metrics UI Grid
             if valid_attachments:
@@ -869,12 +818,12 @@ elif page == "MSG Conversion":
                 att_df.columns = ["File Name", "Document Type"]
                 st.dataframe(att_df, use_container_width=True)
             else:
-                st.warning("⚠️ No valid structural document attachments (.pdf/.docx) detected inside this email structure.")
+                st.warning("No valid structural document attachments (.pdf/.docx) detected inside this email structure.")
 
             st.markdown("---")
             
             # COMPILE BUNDLE BUTTON
-            if st.button("⚙️ Compile Full Email Package (Body + All Attachments) to PDF ZIP", use_container_width=True):
+            if st.button("Compile Full Email Package (Body + All Attachments) to PDF ZIP", use_container_width=True):
                 with st.spinner("Executing dynamic PDF rendering algorithms... Please wait..."):
                     try:
                         zip_buffer = io.BytesIO()
@@ -946,9 +895,9 @@ elif page == "MSG Conversion":
                                     zip_file.writestr(clean_pdf_name, word_pdf_buffer.getvalue())
 
                         # Trigger Success Layout
-                        st.success("🎉 Full Package Compiled! Email body and all document templates packed securely.")
+                        st.success("Full Package Compiled! Email body and all document templates packed securely.")
                         st.download_button(
-                            label="📥 Download Complete Converted PDF Package (ZIP)",
+                            label="Download Complete Converted PDF Package (ZIP)",
                             data=zip_buffer.getvalue(),
                             file_name=f"{base_name}_Full_PDF_Package.zip",
                             mime="application/zip",
@@ -960,11 +909,11 @@ elif page == "ARS Check Updation":
     st.markdown('<p class="main-title"> ARS Check Updation</p>', unsafe_allow_html=True)
     st.info("Work in progress... This route is a placeholder for the background verification portal automation.")
 
-# ----------------- PAGE: I BRIDGE ALLOCATION SUITE -----------------
+# ----------------- I BRIDGE ALLOCATION SUITE -----------------
 elif page == "I bridge Allocation":
         import openpyxl
         
-        st.markdown('<p class="main-title">⚡ Intelligent I-Bridge Workload Allocator</p>', unsafe_allow_html=True)
+        st.markdown('<p class="main-title">Intelligent I-Bridge Workload Allocator</p>', unsafe_allow_html=True)
         st.write("Upload your raw data file to instantly clean duplicates, filter restricted series, and generate a dual-sheet allocation tracker.")
 
         # File Uploader supporting both CSV and Excel format
@@ -973,14 +922,14 @@ elif page == "I bridge Allocation":
         if uploaded_alloc_file is not None:
             try:
                 with st.spinner("Analyzing data streams and mapping core matrices..."):
-                    # --- 1. DYNAMIC AUTO-DETECTING FILE LOADING LAYER ---
+                    # --- 1.DYNAMIC AUTO-DETECTING FILE LOADING LAYER ---
                     if uploaded_alloc_file.name.endswith('.csv'):
                         try:
-                            # sep=None aur engine='python' automatic delimiter pehchan leta hai
+                            # sep=None and engine='python' automatic delimiter 
                             df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", sep=None, engine='python', on_bad_lines='skip')
                         except Exception:
                             uploaded_alloc_file.seek(0)
-                            # Backup agar top par metadata headers ho
+                            # Backup if there are voter handers on top
                             df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", skiprows=4, sep=None, engine='python', on_bad_lines='skip')
                     else:
                         df_alloc = pd.read_excel(uploaded_alloc_file)
@@ -988,30 +937,29 @@ elif page == "I bridge Allocation":
                     # Clean column names for case sensitivity issues
                     df_alloc.columns = df_alloc.columns.str.strip()
                     
-                    # Tab Fallback verification (Grafana specific)
+                    # Fallback verification (Grafana specific)
                     if len(df_alloc.columns) <= 1:
                         uploaded_alloc_file.seek(0)
                         df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", sep='\t', on_bad_lines='skip')
                         df_alloc.columns = df_alloc.columns.str.strip()
 
                     # --- 2. SAFE COLUMN IDENTIFICATION (FIX FOR INDEX OUT OF BOUNDS) ---
-                    # Strict text search taaki index array range se bahar na jaye
+                    # Strict text search so that the index does not go outside the array range
                     ars_candidates = [col for col in df_alloc.columns if 'ars' in col.lower() or 'ars no' in col.lower()]
                     ageing_candidates = [col for col in df_alloc.columns if 'ageing' in col.lower() or 'hour' in col.lower()]
                     
                     if ars_candidates:
                         ars_col = ars_candidates[0]
                     else:
-                        st.error("❌ File mein 'ARS No' column nahi mila! Please check columns: " + str(df_alloc.columns.tolist()))
+                        st.error("File mein 'ARS No' column nahi mila! Please check columns: " + str(df_alloc.columns.tolist()))
                         st.stop()
                         
                     if ageing_candidates:
                         ageing_col = ageing_candidates[0]
                     else:
-                        st.error("❌ File mein 'Ageing_Hour' column nahi mila! Please check columns: " + str(df_alloc.columns.tolist()))
+                        st.error("File mein 'Ageing_Hour' column nahi mila! Please check columns: " + str(df_alloc.columns.tolist()))
                         st.stop()
-                    # --------------------------------------------------------------------
-                    
+                        
                     # 3. REMOVE DUPLICATED ARS NUMBERS (Strict rule: pick only 1 out of multiple repeats)
                     initial_count = len(df_alloc)
                     df_alloc = df_alloc.dropna(subset=[ars_col])
@@ -1030,17 +978,17 @@ elif page == "I bridge Allocation":
                     total_available_rows = len(df_filtered)
 
                 # Show Live Queue Analytics Cards
-                st.markdown('<p class="section-header">📊 Cleaned Queue Analytics</p>', unsafe_allow_html=True)
+                st.markdown('<p class="section-header">Cleaned Queue Analytics</p>', unsafe_allow_html=True)
                 stat_col1, stat_col2, stat_col3 = st.columns(3)
                 with stat_col1:
                     st.metric(label="Total Cases Available for Allocation", value=f"{total_available_rows} rows")
                 with stat_col2:
-                    st.metric(label="Duplicate Repeats Cleaned 🚫", value=f"{dedup_count} items")
+                    st.metric(label="Duplicate Repeats Cleaned", value=f"{dedup_count} items")
                 with stat_col3:
-                    st.metric(label="2304 Series Blocked 🛡️", value=f"{excluded_2304_count} rows")
+                    st.metric(label="2304 Series Blocked", value=f"{excluded_2304_count} rows")
 
                 st.markdown("---")
-                st.markdown('<p class="section-header">👥 Team Workload Allocation Settings (5 Slots)</p>', unsafe_allow_html=True)
+                st.markdown('<p class="section-header">Team Workload Allocation Settings (5 Slots)</p>', unsafe_allow_html=True)
                 st.info("Enter the User Names and the number of cases you want to allocate to each slot.")
 
                 # Input Slots configuration
@@ -1058,14 +1006,14 @@ elif page == "I bridge Allocation":
                 st.markdown("---")
 
                 # TRIGGER ALLOCATION PROCESSING PIPELINE
-                if st.button("⚡ Process Workload Allocation & Compile XLSX", use_container_width=True):
+                if st.button("Process Workload Allocation & Compile XLSX", use_container_width=True):
                     if not user_allocations:
-                        st.warning("⚠️ Please fill at least one User Name and a valid case count greater than 0 to allocate data!")
+                        st.warning("Please fill at least one User Name and a valid case count greater than 0 to allocate data!")
                     else:
                         total_requested_allocation = sum(item['count'] for item in user_allocations)
                         
                         if total_requested_allocation > total_available_rows:
-                            st.error(f"❌ Allocation Limit Exceeded! You requested total {total_requested_allocation} cases, but only {total_available_rows} cases are available.")
+                            st.error(f"Allocation Limit Exceeded! You requested total {total_requested_allocation} cases, but only {total_available_rows} cases are available.")
                         else:
                             with st.spinner("Slicing data queues and generating dual-sheet tracker framework..."):
                                 current_pointer = 0
@@ -1080,7 +1028,7 @@ elif page == "I bridge Allocation":
                                     # Extract the exact slice block for this user
                                     sub_df = df_filtered.iloc[current_pointer : current_pointer + count].copy()
                                     
-                                    # Create a clean DataFrame with ONLY Allocated User Name and ARS No (Kachra Saaf)
+                                    # Create a clean DataFrame with ONLY Allocated User Name and ARS No
                                     clean_sub_df = pd.DataFrame()
                                     clean_sub_df['Allocated User Name'] = [name] * len(sub_df)
                                     clean_sub_df['ARS No'] = sub_df[ars_col].values
@@ -1102,14 +1050,14 @@ elif page == "I bridge Allocation":
                                 # Create Summary Tracking DataFrame
                                 final_tracker_df = pd.DataFrame(tracker_rows)
                                 
-                                st.success(f"🎉 Process Completed! Distributed {total_requested_allocation} cases among {len(user_allocations)} team members.")
+                                st.success(f"Process Completed! Distributed {total_requested_allocation} cases among {len(user_allocations)} team members.")
                                 
-                                # UI Summary Record Display (Taaki baar baar filter na karna pade)
-                                st.markdown('<p class="section-header">📈 Live Allocation Summary Record</p>', unsafe_allow_html=True)
+                                # UI Summary Record Display
+                                st.markdown('<p class="section-header">Live Allocation Summary Record</p>', unsafe_allow_html=True)
                                 st.dataframe(final_tracker_df, use_container_width=True)
                                 
                                 # Show preview of assigned breakdown configurations
-                                st.markdown('<p class="section-header">🔍 Data Output Preview (Top 5 Rows)</p>', unsafe_allow_html=True)
+                                st.markdown('<p class="section-header">Data Output Preview (Top 5 Rows)</p>', unsafe_allow_html=True)
                                 st.dataframe(final_allocation_df.head(5), use_container_width=True)
                                 
                                 # Create an in-memory excel stream with DUAL SHEETS using openpyxl
@@ -1124,7 +1072,7 @@ elif page == "I bridge Allocation":
                                 
                                 # Download button for compiled sheet
                                 st.download_button(
-                                    label="📥 Download Allocated XLSX File (Dual Sheets Loaded)",
+                                    label="Download Allocated XLSX File (Dual Sheets Loaded)",
                                     data=excel_output,
                                     file_name="I_Bridge_Workload_Allocation.xlsx",
                                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
