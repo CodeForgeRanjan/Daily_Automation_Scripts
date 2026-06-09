@@ -170,7 +170,7 @@ page = st.sidebar.radio("Go to:", ["Data Upload", "Image And Docs Converted", "M
 
 if page == "Data Upload":
     st.markdown('<p class="main-title">Data CleanUp Dashboard</p>', unsafe_allow_html=True)
-    st.write("Upload your raw CSV file and Pincode Master file to instantly generate clean data.")
+    st.write("Upload your raw CSV file and Master file to instantly generate clean data.")
 
     # Empty State Guide 
     st.info("Welcome! Please upload both required files below to trigger the automated data cleaning pipeline.")
@@ -357,7 +357,7 @@ if page == "Data Upload":
             st.error(f"error encountered during setup: {e}")
             
     elif my_file is not None and master_file is None:
-        st.info(" Please upload the Pincode Master file to process automatic City & City ID mapping.")
+        st.info(" Please upload the Master file to process automatic City & City ID mapping.")
 
 #  IMAGE & DOCS CONVERTED (ZIP + AUTO-ROTATE ENABLED) 
 elif page == "Image And Docs Converted":
