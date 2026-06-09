@@ -182,7 +182,7 @@ if page == "Data Upload":
         my_file = st.file_uploader("Upload CSV File", type=["csv"], key="my_file", label_visibility="collapsed")
 
     with col2:
-        st.markdown('<p class="section-header">Pincode Master Database</p>', unsafe_allow_html=True)
+        st.markdown('<p class="section-header">Master Database</p>', unsafe_allow_html=True)
         master_file = st.file_uploader("Upload Pincode Master File", type=["xlsx", "xls"], key="master_file", label_visibility="collapsed")
 
     if my_file is not None and master_file is not None:
