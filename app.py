@@ -921,102 +921,46 @@ elif page == "I bridge Allocation":
 
         if uploaded_alloc_file is not None:
             try:
-                # with st.spinner("Analyzing data streams and mapping core matrices..."):
-                #     # --- 1.DYNAMIC AUTO-DETECTING FILE LOADING LAYER ---
-                #     if uploaded_alloc_file.name.endswith('.csv'):
-                #         try:
-                #             # sep=None and engine='python' automatic delimiter 
-                #             df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", sep=None, engine='python', on_bad_lines='skip')
-                #         except Exception:
-                #             uploaded_alloc_file.seek(0)
-                #             # Backup if there are voter handers on top
-                #             df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", skiprows=4, sep=None, engine='python', on_bad_lines='skip')
-                #     else:
-                #         df_alloc = pd.read_excel(uploaded_alloc_file)
-                    
-                #     # Clean column names for case sensitivity issues
-                #     df_alloc.columns = df_alloc.columns.str.strip()
-                    
-                #     # Fallback verification (Grafana specific)
-                #     if len(df_alloc.columns) <= 1:
-                #         uploaded_alloc_file.seek(0)
-                #         df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", sep='\t', on_bad_lines='skip')
-                #         df_alloc.columns = df_alloc.columns.str.strip()
-
-                #     # --- 2. SAFE COLUMN IDENTIFICATION (FIX FOR INDEX OUT OF BOUNDS) ---
-                #     # Strict text search so that the index does not go outside the array range
-                #     ars_candidates = [col for col in df_alloc.columns if 'ars' in col.lower() or 'ars no' in col.lower()]
-                #     ageing_candidates = [col for col in df_alloc.columns if 'ageing' in col.lower() or 'hour' in col.lower()]
-                    
-                #     if ars_candidates:
-                #         ars_col = ars_candidates[0]
-                #     else:
-                #         st.error("File mein 'ARS No' column nahi mila! Please check columns: " + str(df_alloc.columns.tolist()))
-                #         st.stop()
-                        
-                #     if ageing_candidates:
-                #         ageing_col = ageing_candidates[0]
-                #     else:
-                #         st.error("File mein 'Ageing_Hour' column nahi mila! Please check columns: " + str(df_alloc.columns.tolist()))
-                #         st.stop()
-                        
-                #     # 3. REMOVE DUPLICATED ARS NUMBERS (Strict rule: pick only 1 out of multiple repeats)
-                #     initial_count = len(df_alloc)
-                #     df_alloc = df_alloc.dropna(subset=[ars_col])
-                #     df_alloc = df_alloc.drop_duplicates(subset=[ars_col])
-                #     dedup_count = initial_count - len(df_alloc)
-                    
-                #     # 4. HARD FILTER: Exclude ARS numbers starting with '2304'
-                #     df_alloc[ars_col] = df_alloc[ars_col].astype(str).str.strip()
-                #     df_filtered = df_alloc[~df_alloc[ars_col].str.startswith('2304')].copy()
-                #     excluded_2304_count = len(df_alloc) - len(df_filtered)
-                    
-                #     # 5. SORT BY AGEING HOUR (Highest ageing hours first for SLA safety)
-                #     df_filtered[ageing_col] = pd.to_numeric(df_filtered[ageing_col], errors='coerce').fillna(0)
-                #     df_filtered = df_filtered.sort_values(by=ageing_col, ascending=False).reset_index(drop=True)
-                        
-                #     total_available_rows = len(df_filtered)
-
-
-                with st.spinner("Analyzing data streams (Lightweight Mode Active)..."):
-                    # --- UPGRADED RESILIENT COLUMN-SPECIFIC LOAD LAYER ---
+                with st.spinner("Analyzing data streams and mapping core matrices..."):
+                    # --- 1.DYNAMIC AUTO-DETECTING FILE LOADING LAYER ---
                     if uploaded_alloc_file.name.endswith('.csv'):
                         try:
-                            # Strict column filtering layer to prevent Axios Network line break crashes
-                            df_alloc = pd.read_csv(
-                                uploaded_alloc_file, 
-                                encoding="latin1", 
-                                usecols=lambda c: any(x in c.lower() for x in ['ars', 'ageing', 'hour']),
-                                on_bad_lines='skip'
-                            )
+                            # sep=None and engine='python' automatic delimiter 
+                            df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", sep=None, engine='python', on_bad_lines='skip')
                         except Exception:
                             uploaded_alloc_file.seek(0)
-                            # Backup layout fallback with generic auto separator detection
-                            df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", sep=None, engine='python', on_bad_lines='skip')
+                            # Backup if there are voter handers on top
+                            df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", skiprows=4, sep=None, engine='python', on_bad_lines='skip')
                     else:
                         df_alloc = pd.read_excel(uploaded_alloc_file)
                     
-                    # Clean column names for safety
+                    # Clean column names for case sensitivity issues
                     df_alloc.columns = df_alloc.columns.str.strip()
+                    
+                    # Fallback verification (Grafana specific)
+                    if len(df_alloc.columns) <= 1:
+                        uploaded_alloc_file.seek(0)
+                        df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", sep='\t', on_bad_lines='skip')
+                        df_alloc.columns = df_alloc.columns.str.strip()
 
-                    # --- SAFE COLUMN IDENTIFICATION ---
+                    # --- 2. SAFE COLUMN IDENTIFICATION (FIX FOR INDEX OUT OF BOUNDS) ---
+                    # Strict text search so that the index does not go outside the array range
                     ars_candidates = [col for col in df_alloc.columns if 'ars' in col.lower() or 'ars no' in col.lower()]
                     ageing_candidates = [col for col in df_alloc.columns if 'ageing' in col.lower() or 'hour' in col.lower()]
                     
                     if ars_candidates:
                         ars_col = ars_candidates[0]
                     else:
-                        st.error("❌ File mein 'ARS No' column nahi mila! Please check columns: " + str(df_alloc.columns.tolist()))
+                        st.error("File mein 'ARS No' column nahi mila! Please check columns: " + str(df_alloc.columns.tolist()))
                         st.stop()
                         
                     if ageing_candidates:
                         ageing_col = ageing_candidates[0]
                     else:
-                        st.error("❌ File mein 'Ageing_Hour' column nahi mila! Please check columns: " + str(df_alloc.columns.tolist()))
+                        st.error("File mein 'Ageing_Hour' column nahi mila! Please check columns: " + str(df_alloc.columns.tolist()))
                         st.stop()
-                    # --------------------------------------------------------------------
-                    
-                    # 3. REMOVE DUPLICATED ARS NUMBERS
+                        
+                    # 3. REMOVE DUPLICATED ARS NUMBERS (Strict rule: pick only 1 out of multiple repeats)
                     initial_count = len(df_alloc)
                     df_alloc = df_alloc.dropna(subset=[ars_col])
                     df_alloc = df_alloc.drop_duplicates(subset=[ars_col])
@@ -1027,116 +971,11 @@ elif page == "I bridge Allocation":
                     df_filtered = df_alloc[~df_alloc[ars_col].str.startswith('2304')].copy()
                     excluded_2304_count = len(df_alloc) - len(df_filtered)
                     
-                    # 5. SORT BY AGEING HOUR
+                    # 5. SORT BY AGEING HOUR (Highest ageing hours first for SLA safety)
                     df_filtered[ageing_col] = pd.to_numeric(df_filtered[ageing_col], errors='coerce').fillna(0)
                     df_filtered = df_filtered.sort_values(by=ageing_col, ascending=False).reset_index(drop=True)
                         
                     total_available_rows = len(df_filtered)
-
-                # Show Live Queue Analytics Cards
-                st.markdown('<p class="section-header">Cleaned Queue Analytics</p>', unsafe_allow_html=True)
-                stat_col1, stat_col2, stat_col3 = st.columns(3)
-                with stat_col1:
-                    st.metric(label="Total Cases Available for Allocation", value=f"{total_available_rows} rows")
-                with stat_col2:
-                    st.metric(label="Duplicate Repeats Cleaned", value=f"{dedup_count} items")
-                with stat_col3:
-                    st.metric(label="2304 Series Blocked", value=f"{excluded_2304_count} rows")
-
-                st.markdown("---")
-                st.markdown('<p class="section-header">Team Workload Allocation Settings (5 Slots)</p>', unsafe_allow_html=True)
-                st.info("Enter the User Names and the number of cases you want to allocate to each slot.")
-
-                # Input Slots configuration
-                user_allocations = []
-                for idx in range(1, 6):
-                    col_name, col_count = st.columns([3, 2])
-                    with col_name:
-                        u_name = st.text_input(f"Slot {idx}: User Name", key=f"u_name_{idx}", placeholder=f"Enter name for user {idx}...")
-                    with col_count:
-                        u_count = st.number_input(f"Slot {idx}: No. of Cases", min_value=0, max_value=total_available_rows, step=1, key=f"u_count_{idx}")
-                    
-                    if u_name.strip() != "" and u_count > 0:
-                        user_allocations.append({"name": u_name.strip(), "count": int(u_count)})
-
-                st.markdown("---")
-
-                # TRIGGER ALLOCATION PROCESSING PIPELINE
-                if st.button("Process Workload Allocation & Compile XLSX", use_container_width=True):
-                    if not user_allocations:
-                        st.warning("Please fill at least one User Name and a valid case count greater than 0 to allocate data!")
-                    else:
-                        total_requested_allocation = sum(item['count'] for item in user_allocations)
-                        
-                        if total_requested_allocation > total_available_rows:
-                            st.error(f"Allocation Limit Exceeded! You requested total {total_requested_allocation} cases, but only {total_available_rows} cases are available.")
-                        else:
-                            with st.spinner("Slicing data queues and generating dual-sheet tracker framework..."):
-                                current_pointer = 0
-                                allocated_chunks = []
-                                tracker_rows = []
-                                
-                                # Process slicing logic over data rows array
-                                for alloc in user_allocations:
-                                    name = alloc['name']
-                                    count = alloc['count']
-                                    
-                                    # Extract the exact slice block for this user
-                                    sub_df = df_filtered.iloc[current_pointer : current_pointer + count].copy()
-                                    
-                                    # Create a clean DataFrame with ONLY Allocated User Name and ARS No
-                                    clean_sub_df = pd.DataFrame()
-                                    clean_sub_df['Allocated User Name'] = [name] * len(sub_df)
-                                    clean_sub_df['ARS No'] = sub_df[ars_col].values
-                                    
-                                    allocated_chunks.append(clean_sub_df)
-                                    
-                                    # Tracking Summary row block append
-                                    tracker_rows.append({
-                                        "Allocated User Name": name,
-                                        "Allocated Case Count": count
-                                    })
-                                    
-                                    # Move pointer forward
-                                    current_pointer += count
-                                
-                                # Consolidate Main Allocation Data List
-                                final_allocation_df = pd.concat(allocated_chunks, ignore_index=True)
-                                
-                                # Create Summary Tracking DataFrame
-                                final_tracker_df = pd.DataFrame(tracker_rows)
-                                
-                                st.success(f"Process Completed! Distributed {total_requested_allocation} cases among {len(user_allocations)} team members.")
-                                
-                                # UI Summary Record Display
-                                st.markdown('<p class="section-header">Live Allocation Summary Record</p>', unsafe_allow_html=True)
-                                st.dataframe(final_tracker_df, use_container_width=True)
-                                
-                                # Show preview of assigned breakdown configurations
-                                st.markdown('<p class="section-header">Data Output Preview (Top 5 Rows)</p>', unsafe_allow_html=True)
-                                st.dataframe(final_allocation_df.head(5), use_container_width=True)
-                                
-                                # Create an in-memory excel stream with DUAL SHEETS using openpyxl
-                                excel_buffer = io.BytesIO()
-                                with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
-                                    # Sheet 1: Just User Name and ARS No
-                                    final_allocation_df.to_excel(writer, index=False, sheet_name='Allocation_List')
-                                    # Sheet 2: The static verification tracker counts record
-                                    final_tracker_df.to_excel(writer, index=False, sheet_name='Allocation_Tracker')
-                                    
-                                excel_output = excel_buffer.getvalue()
-                                
-                                # Download button for compiled sheet
-                                st.download_button(
-                                    label="Download Allocated XLSX File (Dual Sheets Loaded)",
-                                    data=excel_output,
-                                    file_name="I_Bridge_Workload_Allocation.xlsx",
-                                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                                    use_container_width=True
-                                )
-
-            except Exception as e:
-                st.error(f"Allocation Engine Failed: {e}")
                 
 elif page == "About Tool":
     st.markdown('<p class="main-title"> About Automation Utility Tool</p>', unsafe_allow_html=True)
