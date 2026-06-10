@@ -921,46 +921,102 @@ elif page == "I bridge Allocation":
 
         if uploaded_alloc_file is not None:
             try:
-                with st.spinner("Analyzing data streams and mapping core matrices..."):
-                    # --- 1.DYNAMIC AUTO-DETECTING FILE LOADING LAYER ---
+                # with st.spinner("Analyzing data streams and mapping core matrices..."):
+                #     # --- 1.DYNAMIC AUTO-DETECTING FILE LOADING LAYER ---
+                #     if uploaded_alloc_file.name.endswith('.csv'):
+                #         try:
+                #             # sep=None and engine='python' automatic delimiter 
+                #             df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", sep=None, engine='python', on_bad_lines='skip')
+                #         except Exception:
+                #             uploaded_alloc_file.seek(0)
+                #             # Backup if there are voter handers on top
+                #             df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", skiprows=4, sep=None, engine='python', on_bad_lines='skip')
+                #     else:
+                #         df_alloc = pd.read_excel(uploaded_alloc_file)
+                    
+                #     # Clean column names for case sensitivity issues
+                #     df_alloc.columns = df_alloc.columns.str.strip()
+                    
+                #     # Fallback verification (Grafana specific)
+                #     if len(df_alloc.columns) <= 1:
+                #         uploaded_alloc_file.seek(0)
+                #         df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", sep='\t', on_bad_lines='skip')
+                #         df_alloc.columns = df_alloc.columns.str.strip()
+
+                #     # --- 2. SAFE COLUMN IDENTIFICATION (FIX FOR INDEX OUT OF BOUNDS) ---
+                #     # Strict text search so that the index does not go outside the array range
+                #     ars_candidates = [col for col in df_alloc.columns if 'ars' in col.lower() or 'ars no' in col.lower()]
+                #     ageing_candidates = [col for col in df_alloc.columns if 'ageing' in col.lower() or 'hour' in col.lower()]
+                    
+                #     if ars_candidates:
+                #         ars_col = ars_candidates[0]
+                #     else:
+                #         st.error("File mein 'ARS No' column nahi mila! Please check columns: " + str(df_alloc.columns.tolist()))
+                #         st.stop()
+                        
+                #     if ageing_candidates:
+                #         ageing_col = ageing_candidates[0]
+                #     else:
+                #         st.error("File mein 'Ageing_Hour' column nahi mila! Please check columns: " + str(df_alloc.columns.tolist()))
+                #         st.stop()
+                        
+                #     # 3. REMOVE DUPLICATED ARS NUMBERS (Strict rule: pick only 1 out of multiple repeats)
+                #     initial_count = len(df_alloc)
+                #     df_alloc = df_alloc.dropna(subset=[ars_col])
+                #     df_alloc = df_alloc.drop_duplicates(subset=[ars_col])
+                #     dedup_count = initial_count - len(df_alloc)
+                    
+                #     # 4. HARD FILTER: Exclude ARS numbers starting with '2304'
+                #     df_alloc[ars_col] = df_alloc[ars_col].astype(str).str.strip()
+                #     df_filtered = df_alloc[~df_alloc[ars_col].str.startswith('2304')].copy()
+                #     excluded_2304_count = len(df_alloc) - len(df_filtered)
+                    
+                #     # 5. SORT BY AGEING HOUR (Highest ageing hours first for SLA safety)
+                #     df_filtered[ageing_col] = pd.to_numeric(df_filtered[ageing_col], errors='coerce').fillna(0)
+                #     df_filtered = df_filtered.sort_values(by=ageing_col, ascending=False).reset_index(drop=True)
+                        
+                #     total_available_rows = len(df_filtered)
+
+
+                with st.spinner("Analyzing data streams (Lightweight Mode Active)..."):
+                    # --- UPGRADED RESILIENT COLUMN-SPECIFIC LOAD LAYER ---
                     if uploaded_alloc_file.name.endswith('.csv'):
                         try:
-                            # sep=None and engine='python' automatic delimiter 
-                            df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", sep=None, engine='python', on_bad_lines='skip')
+                            # Strict column filtering layer to prevent Axios Network line break crashes
+                            df_alloc = pd.read_csv(
+                                uploaded_alloc_file, 
+                                encoding="latin1", 
+                                usecols=lambda c: any(x in c.lower() for x in ['ars', 'ageing', 'hour']),
+                                on_bad_lines='skip'
+                            )
                         except Exception:
                             uploaded_alloc_file.seek(0)
-                            # Backup if there are voter handers on top
-                            df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", skiprows=4, sep=None, engine='python', on_bad_lines='skip')
+                            # Backup layout fallback with generic auto separator detection
+                            df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", sep=None, engine='python', on_bad_lines='skip')
                     else:
                         df_alloc = pd.read_excel(uploaded_alloc_file)
                     
-                    # Clean column names for case sensitivity issues
+                    # Clean column names for safety
                     df_alloc.columns = df_alloc.columns.str.strip()
-                    
-                    # Fallback verification (Grafana specific)
-                    if len(df_alloc.columns) <= 1:
-                        uploaded_alloc_file.seek(0)
-                        df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", sep='\t', on_bad_lines='skip')
-                        df_alloc.columns = df_alloc.columns.str.strip()
 
-                    # --- 2. SAFE COLUMN IDENTIFICATION (FIX FOR INDEX OUT OF BOUNDS) ---
-                    # Strict text search so that the index does not go outside the array range
+                    # --- SAFE COLUMN IDENTIFICATION ---
                     ars_candidates = [col for col in df_alloc.columns if 'ars' in col.lower() or 'ars no' in col.lower()]
                     ageing_candidates = [col for col in df_alloc.columns if 'ageing' in col.lower() or 'hour' in col.lower()]
                     
                     if ars_candidates:
                         ars_col = ars_candidates[0]
                     else:
-                        st.error("File mein 'ARS No' column nahi mila! Please check columns: " + str(df_alloc.columns.tolist()))
+                        st.error("❌ File mein 'ARS No' column nahi mila! Please check columns: " + str(df_alloc.columns.tolist()))
                         st.stop()
                         
                     if ageing_candidates:
                         ageing_col = ageing_candidates[0]
                     else:
-                        st.error("File mein 'Ageing_Hour' column nahi mila! Please check columns: " + str(df_alloc.columns.tolist()))
+                        st.error("❌ File mein 'Ageing_Hour' column nahi mila! Please check columns: " + str(df_alloc.columns.tolist()))
                         st.stop()
-                        
-                    # 3. REMOVE DUPLICATED ARS NUMBERS (Strict rule: pick only 1 out of multiple repeats)
+                    # --------------------------------------------------------------------
+                    
+                    # 3. REMOVE DUPLICATED ARS NUMBERS
                     initial_count = len(df_alloc)
                     df_alloc = df_alloc.dropna(subset=[ars_col])
                     df_alloc = df_alloc.drop_duplicates(subset=[ars_col])
@@ -971,7 +1027,7 @@ elif page == "I bridge Allocation":
                     df_filtered = df_alloc[~df_alloc[ars_col].str.startswith('2304')].copy()
                     excluded_2304_count = len(df_alloc) - len(df_filtered)
                     
-                    # 5. SORT BY AGEING HOUR (Highest ageing hours first for SLA safety)
+                    # 5. SORT BY AGEING HOUR
                     df_filtered[ageing_col] = pd.to_numeric(df_filtered[ageing_col], errors='coerce').fillna(0)
                     df_filtered = df_filtered.sort_values(by=ageing_col, ascending=False).reset_index(drop=True)
                         
