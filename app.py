@@ -977,7 +977,6 @@ elif page == "I bridge Allocation":
                         
                     total_available_rows = len(df_filtered)
   # --------------------------END------------------------------ 
-
 elif page == "About Tool":
     st.markdown('<p class="main-title"> About Automation Utility Tool</p>', unsafe_allow_html=True)
     
