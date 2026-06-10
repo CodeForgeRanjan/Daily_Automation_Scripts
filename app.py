@@ -261,22 +261,6 @@ if page == "Data Upload":
                         address_str = str(row['Complete_Address']).lower()
                         detected_target = None
                         
-                        # # Special handling for Delhi variations (South, North, New, Central, West, East)
-                        # if "delhi" in address_str:
-                        #     if "south delhi" in address_str:
-                        #         detected_target = "South Delhi"
-                        #     elif "north delhi" in address_str:
-                        #         detected_target = "North Delhi"
-                        #     elif "new delhi" in address_str:
-                        #         detected_target = "New Delhi"
-                        #     elif "west delhi" in address_str:
-                        #         detected_target = "West Delhi"
-                        #     elif "east delhi" in address_str:
-                        #         detected_target = "East Delhi"
-                        #     else:
-                        #         detected_target = "Delhi"
-                        
-                        # Short names mapping (Hyd, Blr, Indb, etc.)
                         if not detected_target:
                             address_words = re.findall(r'\b\w+\b', address_str)
                             for short_alias, full_name in CITY_ALIAS_MAP.items():
