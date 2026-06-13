@@ -1,20 +1,20 @@
 # 🚗 Multi-Utility Automation Pipeline Tool
 
-A high-performance, secure automation hub built using **Python (Streamlit & Pandas)** designed to eliminate manual data-entry bottlenecks and optimize background verification (BGV) operations.
+A high-performance, secure automation hub built using **Python (Streamlit & Pandas)** designed to eliminate manual data-entry bottlenecks and optimize (BGV) operations.
 
 ---
 
 ## 🛠️ Key Core Modules
 
-### 📈 1. I-Bridge Workload Allocator (Smart Queue Distribution)
-This module automates the manual dispatching of verification cases among team members, ensuring strict adherence to SLA timelines.
+### 📈 1. Bridge Workload Allocator (Smart Queue Distribution)
+This module automates the manual dispatching of cases among team members, ensuring strict adherence to SLA timelines.
 - **⚡ Dynamic File Ingestion:** Auto-detects and parses raw input streams seamlessly from both `.csv` (handling broken lines/tab fallbacks) and `.xlsx` structures.
 - **🧹 Duplicate Clean-Up Layer:** Automatically scans the incoming queue, flags repetitive records, and retains exactly **1 unique case** per applicant to prevent double allocation.
 - **🚫 Restricted Series Filtering:** Instantly detects and purges restricted case sequences (e.g., blocking rows starting with **`2304` series**) based on operational compliance rules.
 - **⏳ SLA-First Smart Sorting:** Automatically converts ageing indicators or hour matrices into numeric formats and sorts the entire queue in **Descending Order** (highest ageing hours first) to secure urgent cases.
 - **👥 Multi-Slot Workload Balancing:** Distributes rows dynamically into customized slices based on user-defined slot names and case limits.
 - **📊 Dual-Sheet Tracker Output:** Generates a professional, production-ready `.xlsx` file using `openpyxl` with two distinct sheets:
-  1. `Allocation_List`: Clean mapping of *Allocated User Name* and *ARS No*.
+  1. `Allocation_List`: Clean mapping of *Allocated User Name* and *No*.
   2. `Allocation_Tracker`: Live operational summary showing exact *Case Counts* per user.
 
 ### 🧹 2. BGC Data CleanUp Dashboard
@@ -45,9 +45,9 @@ This module automates the manual dispatching of verification cases among team me
 ## 🌐 Local Setup & Zero-Dependency Deployment
 
 ### 🛡️ Core Infrastructure Strategy
-This application is designed under a **Local-First Server Architecture** (`http://localhost:8501`). By running entirely within the local machine's RAM and CPU, the application processes files without data packets ever leaving the machine. This effectively bypasses restrictive enterprise proxy filters, Zscaler loops, and DLP (Data Loss Prevention) blocks, ensuring safe, high-speed corporate execution.
+This application is architected under a Local-First / Offline-First Server Model (http://localhost:8501). By executing data processing workflows entirely within the local machine's volatile memory (RAM) and local CPU, the tool eliminates external network dependency. This Client-Side execution design guarantees zero data exposure, ensures strict compliance with corporate Data Loss Prevention (DLP) frameworks, and guarantees high-speed data processing without relying on external cloud endpoints.
 
-### 1. Prerequisites
+### 1. Requirements
 Ensure Python is installed on your local machine.
 
 ### 2. Installation
