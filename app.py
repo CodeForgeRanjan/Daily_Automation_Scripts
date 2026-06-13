@@ -179,7 +179,7 @@ st.sidebar.caption("🛡️ **Mode:** Local-First Secure")
 
 
 st.sidebar.markdown(
-    '<p style="color: #888888; font-size: 11px; text-align: left; margin-top: 50px;">'
+    '<p style="color: #888888; font-size: 20px; text-align: centre; margin-top: 80px;">'
     '© 2026 CodeForgeRanjan</p>', 
     unsafe_allow_html=True
 )
