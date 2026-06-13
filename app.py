@@ -161,11 +161,28 @@ def find_closest_city_id(detected_district, master_unique_df):
             
     return "NA"
 
-
-#  SIDEBAR NAVIGATION
+# SIDEBAR NAVIGATION 
 st.sidebar.markdown('<p class="sidebar-heading">Navigation Menu</p>', unsafe_allow_html=True)
-page = st.sidebar.radio("Go to:", ["Data Upload", "Image And Docs Converted", "MSG Conversion", "ARS Check Updation" ,"Bridge Allocation","About Tool"])
 
+# Aapka purana radio button menu
+page = st.sidebar.radio(
+    "Go to:", 
+    ["Data Upload", "Image And Docs Converted", "MSG Conversion", "ARS Check Updation", "Bridge Allocation", "About Tool"]
+)
+
+# NEW PREMIUM VERSION FOOTER IN SIDEBAR ---
+st.sidebar.markdown("---") 
+
+st.sidebar.caption("🤖 **System Status:** Connected")
+st.sidebar.caption("📦 **Tool Version:** `v1.2.0 (Stable)`")
+st.sidebar.caption("🛡️ **Mode:** Local-First Secure")
+
+
+st.sidebar.markdown(
+    '<p style="color: #888888; font-size: 11px; text-align: left; margin-top: 50px;">'
+    '© 2026 CodeForgeRanjan</p>', 
+    unsafe_allow_html=True
+)
 
 if page == "Data Upload":
     st.markdown('<p class="main-title">Data CleanUp Dashboard</p>', unsafe_allow_html=True)
@@ -886,7 +903,7 @@ elif page == "ARS Check Updation":
     st.info("Work in progress... This route is a placeholder for the background verification portal automation.")
 
 # BRIDGE ALLOCATION SUITE 
-elif page == "bridge Allocation":
+elif page == "Bridge Allocation":
         import openpyxl
         
         st.markdown('<p class="main-title">Grafana_DATA</p>', unsafe_allow_html=True)
@@ -1067,7 +1084,7 @@ elif page == "About Tool":
 
     ### 🛠️ Key Production Modules & Advanced Features
 
-    #### 📈 1. I-Bridge Workload Allocator (Smart Queue Distribution)
+    #### 📈 1. Bridge Workload Allocator (Smart Queue Distribution)
     - **Dynamic File Ingestion:** Auto-detects, reads, and cleans raw input streams seamlessly from both messy `.csv` and structured `.xlsx` workbooks.
     - **Duplicate Clean-Up Layer:** Scans incoming queues in real time, flags repetitive references, and drops duplicates to ensure exactly **1 unique case per applicant**.
     - **Compliance Series Filtering:** Instantly runs logical masks to block restricted case sequences (e.g., automatically filtering out the **`2304` series**).
