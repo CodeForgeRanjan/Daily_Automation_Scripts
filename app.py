@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 import re
 import io
-import zipfile  
-from PIL import Image, ImageOps  
+from PIL import Image
+from rapidfuzz import process, utils # Fast Fuzzy matching
 
 def play_celebration_confetti():
     """Poori screen par patakhe phodne ke liye custom JavaScript inject engine"""
@@ -11,17 +11,26 @@ def play_celebration_confetti():
         """
         <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
         <script>
-            function launch() {
-                // Blast 1: Left Side Se
-                confetti({ particleCount: 150, spread: 80, origin: { x: 0, y: 0.6 } });
-                // Blast 2: Right Side Se
-                confetti({ particleCount: 150, spread: 80, origin: { x: 1, y: 0.6 } });
-                // Blast 3: Center Se Thoda Oopar
-                setTimeout(() => {
-                    confetti({ particleCount: 200, spread: 100, origin: { y: 0.4 } });
-                }, 300);
-            }
-            setTimeout(launch, 100);
+            // Blast 1: Left Side Se
+            confetti({
+                particleCount: 150,
+                spread: 80,
+                origin: { x: 0, y: 0.6 }
+            });
+            // Blast 2: Right Side Se
+            confetti({
+                particleCount: 150,
+                spread: 80,
+                origin: { x: 1, y: 0.6 }
+            });
+            // Blast 3: Center Se Thoda Oopar
+            setTimeout(() => {
+                confetti({
+                    particleCount: 200,
+                    spread: 100,
+                    origin: { y: 0.4 }
+                });
+            }, 300);
         </script>
         """,
         height=0, # Isse background mein silently chalega, screen par koi khali box nahi dikhega
@@ -89,12 +98,14 @@ def clean_address(text):
     
     text = "".join(ch for ch in str(text).strip() if ch.isprintable())
 
+
     # NEW ADVANCED HYPERLINK / DRIVE LINK REMOVAL LAYER ---
     url_pattern = r'(https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b[-a-zA-Z0-9()@:%_\+.~#?&//=]*)|(www\.[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b[-a-zA-Z0-9()@:%_\+.~#?&//=]*)|(drive\.google\.com\/[^\s]*)'
     text = re.sub(url_pattern, '', text, flags=re.IGNORECASE)
     
     # If text like 'Drive Link', 'Link:', 'URL' remains in front of the link, remove it too
     text = re.sub(r'\b(?:drive\s*link|link|url)[:.-]?\s*_*', '', text, flags=re.IGNORECASE)
+    
 
     # MOBILE NUMBER REMOVAL LAYER 
     text = re.sub(r'\b\d{5}[-\s]?\d{5}\b', '', text)
@@ -106,6 +117,7 @@ def clean_address(text):
     ]
     for pattern in unwanted_mobile_patterns:
         text = re.sub(pattern, '', text, flags=re.IGNORECASE)
+    
     
     unwanted = [
         "Aadhar Address", "address", "Rent agreement Address", "agreement Address", 
@@ -123,7 +135,10 @@ def clean_address(text):
 def extract_pin(text):
     if pd.isna(text) or str(text).strip() == "": 
         return ""
+    
+    # Get a list of all 6-digit numbers from the given address
     all_matches = re.findall(r'\d{6}', str(text))
+    # If you get matches, always pick the LAST one (index -1)
     return all_matches[-1] if all_matches else ""
 
 def split_name(name):
@@ -153,21 +168,24 @@ def remove_illegal_chars(val):
         return ""
     return "".join(ch for ch in str(val) if ch.isprintable())
 
+#  FUZZY MATCHING HELPER ENGINE 
 def find_closest_city_id(detected_district, master_unique_df):
+    """It will take the ID of the closest match by comparing the string from the list of all unique districts."""
     if not detected_district or detected_district == "NA":
         return "NA"
     
-    from rapidfuzz import process, utils
     master_districts = master_unique_df['DISTRICT'].dropna().astype(str).tolist()
     
+    # RapidFuzz engine 
     match_result = process.extractOne(
         detected_district, 
         master_districts, 
         processor=utils.default_process,
-        score_cutoff=70.0
+        score_cutoff=70.0 # Will accept only if there is more than 70% similarity
     )
     if match_result:
         matched_name = match_result[0]
+        # Filter the corresponding row of that matched district and get the ID
         matched_row = master_unique_df[master_unique_df['DISTRICT'].astype(str) == matched_name]
         if not matched_row.empty:
             return format_id(matched_row.iloc[0]['City ID/District ID'])
@@ -177,6 +195,7 @@ def find_closest_city_id(detected_district, master_unique_df):
 # SIDEBAR NAVIGATION 
 st.sidebar.markdown('<p class="sidebar-heading">Navigation Menu</p>', unsafe_allow_html=True)
 
+# Aapka purana radio button menu
 page = st.sidebar.radio(
     "Go to:", 
     ["Data Upload", "Image And Docs Converted", "MSG Conversion", "ARS Check Updation", "Bridge Allocation", "About Tool"]
@@ -189,17 +208,18 @@ st.sidebar.caption("🤖 **System Status:** Connected")
 st.sidebar.caption("📦 **Tool Version:** `v1.2.0 (Stable)`")
 st.sidebar.caption("🛡️ **Mode:** Local-First Secure")
 
+
 st.sidebar.markdown(
     '<p style="color: #888888; font-size: 18px; text-align: center; margin-top: 70px;">'
     '© 2026 CodeForgeRanjan</p>', 
     unsafe_allow_html=True
 )
 
-# ================= PAGE FLOW LAYERS =================
-
 if page == "Data Upload":
     st.markdown('<p class="main-title">Data CleanUp Dashboard</p>', unsafe_allow_html=True)
     st.write("Upload your raw CSV file and Master file to instantly generate clean data.")
+
+    # Empty State Guide 
     st.info("Welcome! Please upload both required files below to trigger the automated data cleaning pipeline.")
 
     col1, col2 = st.columns(2)
@@ -219,6 +239,7 @@ if page == "Data Upload":
             st.rerun()
         try:
             with st.spinner("Processing your data smart Fuzzy Matching... Please wait..."):
+                # Load Files
                 df = pd.read_csv(my_file, encoding="latin1")
                 master_df = pd.read_excel(master_file, sheet_name='Sheet1')
                 master_df.columns = master_df.columns.str.strip()
@@ -229,8 +250,10 @@ if page == "Data Upload":
                 df['Cleaned_Address'] = df.iloc[:, 4].apply(clean_address)
                 df['PIN_Extracted'] = df['Cleaned_Address'].apply(extract_pin)
 
+                # Name Split logic
                 df[['First', 'Middle', 'Last']] = df['Candidate Name'].apply(lambda x: pd.Series(split_name(x)))
 
+                # MAPPING & VLOOKUP 
                 df['PIN_Extracted'] = df['PIN_Extracted'].astype(str).str.strip()
                 master_df['PIN CODE'] = master_df['PIN CODE'].astype(str).str.strip()
                 master_unique = master_df.drop_duplicates(subset=['PIN CODE'])
@@ -240,6 +263,7 @@ if page == "Data Upload":
                     left_on='PIN_Extracted', right_on='PIN CODE', how='left'
                 )
 
+                # EXACT FINAL OUTPUT STRUCTURE 
                 final = pd.DataFrame()
                 final['First_Name'] = df['First']
                 final['Middle_Name'] = df['Middle']
@@ -262,6 +286,7 @@ if page == "Data Upload":
                 final['Complete_Address'] = df['Cleaned_Address']
                 final['Pin_Code'] = df['PIN_Extracted']
                 final['Insuff'] = ""
+                final['City'] = df['DISTRICT'].fillna('NA')
                 
                 if 'City ID/District ID' in df.columns:
                     final['City'] = df['City ID/District ID'].apply(format_id)
@@ -270,10 +295,12 @@ if page == "Data Upload":
 
                 final['City_Name_Raw'] = df['DISTRICT'].fillna('NA')
 
+# ADVANCED SHORT NAMES & INTELLECTUAL DISTRICT RE-CORRECTION LAYER 
                 fuzzy_counter = 0
                 master_district_unique = master_df.drop_duplicates(subset=['DISTRICT']).copy()
                 
                 for idx, row in final.iterrows():
+                    # If pincode is missing initial lookup City ID 'NA'
                     if row['City'] == 'NA' or row['City'] == '' or pd.isna(row['City']):
                         address_str = str(row['Complete_Address']).lower()
                         detected_target = None
@@ -285,15 +312,19 @@ if page == "Data Upload":
                                     detected_target = full_name
                                     break
                         
+                        # To match District names for Master Sheet
                         if not detected_target:
                             for m_dist in master_district_unique['DISTRICT'].dropna().astype(str):
                                 if re.search(r'\b' + re.escape(m_dist.lower()) + r'\b', address_str):
                                     detected_target = m_dist
                                     break
                     
+                        # If the target is identified by the city name of the address, apply the mapping
                         if detected_target:
                             matched_rows = master_df[master_df['DISTRICT'].astype(str).str.lower() == detected_target.lower()]
+                            
                             if not matched_rows.empty:
+                                # City ID update 
                                 target_city_id = format_id(matched_rows.iloc[0]['City ID/District ID'])
                                 target_district_name = matched_rows.iloc[0]['DISTRICT']
                                 
@@ -301,26 +332,26 @@ if page == "Data Upload":
                                 final.at[idx, 'City_Name_Raw'] = target_district_name
                                 fuzzy_counter += 1
                                 
+                                    # Pincode Recovery: If Pincode is blank or 'NA', then enter the code of this city from the master file 
                                 current_pin = str(final.at[idx, 'Pin_Code']).strip()
                                 if current_pin == '' or current_pin == 'NA' or pd.isna(final.at[idx, 'Pin_Code']):
+                                    # Pick up the first valid pin code of that district from the master sheet
                                     recovered_pin = str(matched_rows.iloc[0]['PIN CODE']).strip()
                                     final.at[idx, 'Pin_Code'] = recovered_pin
 
                 final['Priority'] = ""
 
+                # Pin Code Fallback Logic
                 missing_mask = (final['City'] == 'NA') & ((final['Pin_Code'] == '') | (final['Pin_Code'].isna()))
                 fallback_count = missing_mask.sum()
                 final.loc[missing_mask, 'City'] = '8440'
 
+                # Remove illegal characters from final structure
                 final = final.map(remove_illegal_chars)
-
-            # --- REFRESH-PROOF CELEBRATION TRIGGER ---
-            if 'cleanup_done' not in st.session_state:
-                st.session_state.cleanup_done = True
-                play_celebration_confetti()
 
             st.success("Process Completed Successfully! All Data Compiled.")
 
+            # Live Metric Cards
             m_col1, m_col2, m_col3, m_col4 = st.columns(4)
             with m_col1:
                 st.metric(label="Total Input Records", value=f"{len(final)} rows")
@@ -332,13 +363,16 @@ if page == "Data Upload":
             with m_col4:
                 st.metric(label="Fallback Swaps (8440)", value=f"{fallback_count} rows")
 
+# Show live preview of processed data
             st.markdown('<p class="section-header">Live Processed Preview (Top 5 Rows)</p>', unsafe_allow_html=True)
             st.dataframe(final.head(5), use_container_width=True)
 
+            # setup for CSV stable download
             csv_buffer = io.StringIO()
             final.to_csv(csv_buffer, index=False)
             csv_output = csv_buffer.getvalue()
             
+            # Stable Download 
             st.download_button(
                 label=" Download Processed CSV File",
                 data=csv_output,
@@ -346,24 +380,25 @@ if page == "Data Upload":
                 mime="text/csv"
             )
 
-            # Dynamic reset logic to fire again on next upload loop
-            if 'cleanup_done' in st.session_state:
-                del st.session_state.cleanup_done
-
         except Exception as e:
             st.error(f"error encountered during setup: {e}")
             
     elif my_file is not None and master_file is None:
         st.info(" Please upload the Master file to process automatic City & City ID mapping.")
         st.success("Process Completed Successfully! All Data Compiled.")
-        play_celebration_confetti()
+play_celebration_confetti() # <-- Ekdum perfect seedh mein!
 
+#  IMAGE & DOCS CONVERTED (ZIP + AUTO-ROTATE ENABLED) 
 elif page == "Image And Docs Converted":
+    import zipfile  
+    from PIL import ImageOps  
+    
     st.markdown('<p class="main-title">Document & Image to PDF Converter Hub</p>', unsafe_allow_html=True)
     st.write("Convert single images with auto-rotation, merge multiple images, or bulk-transform Word files into PDFs with a single 'Download All' Zip option.")
 
     tab1, tab2, tab3 = st.tabs(["Single Image to PDF", "Bulk Merge to One PDF", "Word Docs to PDF"])
 
+    #  SINGLE IMAGE TO SINGLE PDF (WITH ZIP & AUTO-ROTATE) 
     with tab1:
         st.subheader("Convert Individual Images to Separate PDFs")
         single_images = st.file_uploader("Upload Images (Individual Conversion)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="single_key")
@@ -371,14 +406,18 @@ elif page == "Image And Docs Converted":
         if single_images:
             st.success(f"Total {len(single_images)} image(s) uploaded successfully.")
             
+            # If there is only 1 image then show normal download button
             if len(single_images) == 1:
                 try:
                     uploaded_img = single_images[0]
                     img_data = io.BytesIO(uploaded_img.read())
                     img = Image.open(img_data)
                     
+                    # Auto-Orientation 
                     img = ImageOps.exif_transpose(img)
                     img = img.convert('RGB')
+                    
+                    # Resolution correction to Standard A4 Layout (Vertical / Portrait)
                     img.thumbnail((1240, 1754), Image.Resampling.LANCZOS)
                     
                     pdf_buffer = io.BytesIO()
@@ -395,16 +434,20 @@ elif page == "Image And Docs Converted":
                 except Exception as e:
                     st.error(f"Error: {e}")
                     
+            # Show "Download All" zip button if there are more than 1 images
             else:
                 if st.button("Process All Images & Create Zip", key="process_img_zip"):
                     try:
                         with st.spinner("Fixing resolution, orientation and creating Zip..."):
                             zip_buffer = io.BytesIO()
+                            
+                            # Create a Zip folder in memory
                             with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
                                 for idx, uploaded_img in enumerate(single_images):
                                     img_data = io.BytesIO(uploaded_img.read())
                                     img = Image.open(img_data)
                                     
+                                    # Auto-rotate fix for flipped dimensions
                                     img = ImageOps.exif_transpose(img)
                                     img = img.convert('RGB')
                                     img.thumbnail((1240, 1754), Image.Resampling.LANCZOS)
@@ -412,12 +455,11 @@ elif page == "Image And Docs Converted":
                                     pdf_buffer = io.BytesIO()
                                     img.save(pdf_buffer, format="PDF")
                                     
+                                    # Put files inside the zip
                                     clean_name = f"{uploaded_img.name.split('.')[0]}.pdf"
                                     zip_file.writestr(clean_name, pdf_buffer.getvalue())
                                     
                             st.success("All Images Converted successfully!")
-                            play_celebration_confetti() 
-                            
                             st.download_button(
                                 label="Download All PDFs in One Click (ZIP)",
                                 data=zip_buffer.getvalue(),
@@ -428,6 +470,7 @@ elif page == "Image And Docs Converted":
                     except Exception as e:
                         st.error(f"Zip Creation Failed: {e}")
                         
+    # MULTIPLE IMAGES TO ONE MERGE PDF 
     with tab2:
         st.subheader("Compile Multiple Images into a Single Candidate PDF Report")
         bulk_images = st.file_uploader("Upload Multiple Images (All will be merged into a single PDF)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="bulk_key")
@@ -441,6 +484,7 @@ elif page == "Image And Docs Converted":
                         for uploaded_img in bulk_images:
                             img_data = io.BytesIO(uploaded_img.read())
                             img = Image.open(img_data)
+                            # Rotation and resolution check for merge list
                             img = ImageOps.exif_transpose(img)
                             img = img.convert('RGB')
                             img.thumbnail((1240, 1754), Image.Resampling.LANCZOS)
@@ -452,8 +496,6 @@ elif page == "Image And Docs Converted":
                             pdf_data = pdf_buffer.getvalue()
                             
                             st.success("Multi-page PDF Compiled!")
-                            play_celebration_confetti() 
-                            
                             st.download_button(
                                 label="Download Compiled PDF",
                                 data=pdf_data,
@@ -464,6 +506,7 @@ elif page == "Image And Docs Converted":
                 except Exception as e:
                     st.error(f"Merge failed: {e}")
 
+  #  UNIVERSAL WORD DOCS TO PDF 
     with tab3:
         st.markdown('<p class="section-header">Direct Word Document (.docx) to PDF Bulk Converter</p>', unsafe_allow_html=True)
         word_files = st.file_uploader("Upload Word Documents (.docx)", type=["docx"], accept_multiple_files=True, key="word_key")
@@ -478,23 +521,30 @@ elif page == "Image And Docs Converted":
             
             st.success(f"{len(word_files)} docx file(s) staged for universal format conversion.")
             
+            # DYNAMIC UNIVERSAL CONVERSION ENGINE 
             def universal_docx_to_pdf_story(doc, styles):
                 story = []
                 align_map = {0: TA_LEFT, 1: TA_CENTER, 2: TA_RIGHT, 3: TA_JUSTIFY}
                 normal_style = styles['Normal']
                 
+                # Function that removes inner formatting of text 
                 def get_clean_html_text(para):
                     text_html = ""
                     for run in para.runs:
                         text = run.text
                         if not text:
                             continue
+                        # XML characters escape logic to prevent crashes
                         text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                        # Universal checkbox character rendering
                         text = text.replace('☐', '<font name="Helvetica" size="11">&#9633;</font>')
                         
-                        if run.bold: text = f"<b>{text}</b>"
-                        if run.italic: text = f"<i>{text}</i>"
-                        if run.underline: text = f"<u>{text}</u>"
+                        if run.bold:
+                            text = f"<b>{text}</b>"
+                        if run.italic:
+                            text = f"<i>{text}</i>"
+                        if run.underline:
+                            text = f"<u>{text}</u>"
                         text_html += text
                     return text_html
 
@@ -502,6 +552,7 @@ elif page == "Image And Docs Converted":
                 element_index = 0
                 
                 for child in body_elements:
+                    # PARAGRAPH PROCESSING 
                     if child.tag.endswith('p'):
                         from docx.text.paragraph import Paragraph as DocxParagraph
                         para = DocxParagraph(child, doc)
@@ -511,6 +562,7 @@ elif page == "Image And Docs Converted":
                             story.append(Spacer(1, 6))
                             continue
                         
+                        # if there are large tabs/spaces between text
                         if "\t" in para.text or "   " in para.text:
                             parts = [p.strip() for p in re.split(r'\t+|\s{3,}', para.text) if p.strip()]
                             if len(parts) >= 2:
@@ -536,13 +588,21 @@ elif page == "Image And Docs Converted":
                         text_html = get_clean_html_text(para)
                         p_align = align_map.get(para.alignment, TA_LEFT) if para.alignment is not None else TA_LEFT
                         
+                        # It will dynamically scale according to the size/style 
                         p_style = ParagraphStyle(
-                            name=f'UniversalPara_{element_index}', parent=normal_style, alignment=p_align,
-                            fontSize=9.5, leading=14, spaceBefore=4, spaceAfter=4
+                            name=f'UniversalPara_{element_index}',
+                            parent=normal_style,
+                            alignment=p_align,
+                            fontSize=9.5,
+                            leading=14,
+                            spaceBefore=4,
+                            spaceAfter=4
                         )
+                        
                         story.append(Paragraph(text_html, p_style))
                         element_index += 1
                         
+                    # UNIVERSAL TABLE/GRID PROCESSING
                     elif child.tag.endswith('tbl'):
                         from docx.table import Table as DocxTable
                         docx_table = DocxTable(child, doc)
@@ -555,12 +615,18 @@ elif page == "Image And Docs Converted":
                                 for p in cell.paragraphs:
                                     cell_html += get_clean_html_text(p)
                                 
-                                cell_style = ParagraphStyle(name=f'UniCell_{element_index}_{len(row_data)}', parent=normal_style, fontSize=9, leading=12)
+                                cell_style = ParagraphStyle(
+                                    name=f'UniCell_{element_index}_{len(row_data)}',
+                                    parent=normal_style,
+                                    fontSize=9,
+                                    leading=12
+                                )
                                 row_data.append(Paragraph(cell_html, cell_style))
                             table_data.append(row_data)
                         
                         if table_data:
                             num_cols = len(table_data[0])
+                            # Auto-adjust column width based on columns count 
                             col_widths = [504 / num_cols] * num_cols
                             
                             pdf_table = Table(table_data, colWidths=col_widths, repeatRows=1)
@@ -578,22 +644,26 @@ elif page == "Image And Docs Converted":
                             story.append(pdf_table)
                             story.append(Spacer(1, 6))
                         element_index += 1
+                        
                 return story
 
+            # Single Word Document Execution
             if len(word_files) == 1:
                 doc_file = word_files[0]
                 if st.button(f"Convert & Process {doc_file.name}", key="single_word_btn", use_container_width=True):
                     try:
                         doc = Document(doc_file)
                         pdf_buffer = io.BytesIO()
-                        doc_template = SimpleDocTemplate(pdf_buffer, pagesize=letter, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
+                        doc_template = SimpleDocTemplate(
+                            pdf_buffer, 
+                            pagesize=letter,
+                            rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54
+                        )
                         styles = getSampleStyleSheet()
                         story = universal_docx_to_pdf_story(doc, styles)
                         doc_template.build(story)
                         
                         st.success("Document converted with universal layout styling!")
-                        play_celebration_confetti() 
-                        
                         st.download_button(
                             label="Download Converted PDF",
                             data=pdf_buffer.getvalue(),
@@ -603,6 +673,8 @@ elif page == "Image And Docs Converted":
                         )
                     except Exception as e:
                         st.error(f"Conversion Error: {e}")
+            
+            # Bulk Processing Archiver
             else:
                 if st.button("Bulk Convert All Docs & Archive to ZIP", key="bulk_word_zip_btn", use_container_width=True):
                     try:
@@ -612,7 +684,11 @@ elif page == "Image And Docs Converted":
                                 for idx, doc_file in enumerate(word_files):
                                     doc = Document(doc_file)
                                     pdf_buffer = io.BytesIO()
-                                    doc_template = SimpleDocTemplate(pdf_buffer, pagesize=letter, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
+                                    doc_template = SimpleDocTemplate(
+                                        pdf_buffer, 
+                                        pagesize=letter,
+                                        rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54
+                                    )
                                     styles = getSampleStyleSheet()
                                     story = universal_docx_to_pdf_story(doc, styles)
                                     doc_template.build(story)
@@ -621,8 +697,6 @@ elif page == "Image And Docs Converted":
                                     zip_file.writestr(clean_name, pdf_buffer.getvalue())
                                     
                             st.success("Bulk documents universally packed into ZIP!")
-                            play_celebration_confetti() 
-                            
                             st.download_button(
                                 label="Download Processed PDF Package (ZIP)",
                                 data=zip_buffer.getvalue(),
@@ -633,355 +707,404 @@ elif page == "Image And Docs Converted":
                     except Exception as e:
                         st.error(f"Bulk engine failure: {e}")
 
+# PAGE: MSG & EML CONVERSION TO PDF SUITE 
 elif page == "MSG Conversion":
-    import extract_msg
-    from email import message_from_bytes
-    from email.message import EmailMessage
-    from email.utils import formatdate
-    from reportlab.lib.pagesizes import letter
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    
-    st.markdown('<p class="main-title">Premium MSG & EML Conversion</p>', unsafe_allow_html=True)
-    st.write("Upload Outlook .msg or standard .eml files to instantly unpack text structures, map attachments, and download complete compiled PDF bundles.")
-
-    col_msg, col_eml = st.columns(2)
-    
-    with col_msg:
-        st.markdown('<p class="section-header">1: Upload msg File</p>', unsafe_allow_html=True)
-        uploaded_msg = st.file_uploader("Upload Document (.msg)", type=["msg"], key="msg_file_uploader")
+        import extract_msg
+        import zipfile
+        from email import message_from_bytes
+        from email.message import EmailMessage
+        from email.utils import formatdate
+        from reportlab.lib.pagesizes import letter
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
         
-    with col_eml:
-        st.markdown('<p class="section-header">2: Upload EML File</p>', unsafe_allow_html=True)
-        uploaded_eml = st.file_uploader("Upload File (.eml)", type=["eml"], key="eml_file_uploader")
+        st.markdown('<p class="main-title">Premium MSG & EML Conversion</p>', unsafe_allow_html=True)
+        st.write("Upload Outlook .msg or standard .eml files to instantly unpack text structures, map attachments, and download complete compiled PDF bundles.")
 
-    email_body_text = ""
-    email_subject = "No Subject"
-    email_from = "Unknown Sender"
-    email_to = "Unknown Receiver"
-    email_date = formatdate(localtime=True)
-    valid_attachments = []
-    base_name = "Email_Package"
-
-    if uploaded_msg is not None:
-        try:
-            with st.spinner("Decoding Outlook MSG binary data streams..."):
-                msg = extract_msg.Message(uploaded_msg)
-                email_from = msg.sender or "Unknown Sender"
-                email_to = msg.to or "Unknown Receiver"
-                email_subject = msg.subject or "No Subject"
-                email_body_text = msg.body or ""
-                base_name = uploaded_msg.name.split('.')[0]
-                
-                email_msg_obj = EmailMessage()
-                email_msg_obj["From"] = email_from
-                email_msg_obj["To"] = email_to
-                email_msg_obj["Subject"] = email_subject
-                email_msg_obj["Date"] = email_date
-                email_msg_obj.set_content(email_body_text)
-                eml_bytes = email_msg_obj.as_bytes()
-            
-            st.toast(f"EML Conversion Successful for: {base_name}")
-            st.success("Outlook Message file compiled to EML standards successfully!")
-            
-            st.download_button(
-                label="Download Converted EML File",
-                data=eml_bytes,
-                file_name=f"{base_name}.eml",
-                mime="message/rfc822",
-                use_container_width=True
-            )
-            
-            if msg.attachments:
-                for att in msg.attachments:
-                    f_name = att.longFilename or att.shortFilename
-                    if f_name:
-                        ext = f_name.split('.')[-1].lower() if '.' in f_name else ''
-                        if ext in ['pdf', 'docx']:
-                            valid_attachments.append({"name": f_name, "type": ext.upper(), "raw_data": att.data})
-        except Exception as e:
-            st.error(f"MSG Parsing Error: {e}")
-
-    elif uploaded_eml is not None:
-        try:
-            with st.spinner("Parsing standard EML message vectors..."):
-                eml_content = uploaded_eml.read()
-                msg_eml = message_from_bytes(eml_content)
-                
-                email_from = msg_eml.get('From', 'Unknown Sender')
-                email_to = msg_eml.get('To', 'Unknown Receiver')
-                email_subject = msg_eml.get('Subject', 'No Subject')
-                email_date = msg_eml.get('Date', formatdate(localtime=True))
-                base_name = uploaded_eml.name.split('.')[0]
-                
-                if msg_eml.is_multipart():
-                    for part in msg_eml.walk():
-                        content_type = part.get_content_type()
-                        content_disp = str(part.get("Content-Disposition"))
-                        
-                        if content_type == "text/plain" and "attachment" not in content_disp:
-                            try:
-                                email_body_text += part.get_payload(decode=True).decode(part.get_content_charset() or 'utf-8', errors='ignore')
-                            except:
-                                pass
-                        elif "attachment" in content_disp or part.get_filename():
-                            f_name = part.get_filename()
-                            if f_name:
-                                from email.header import decode_header
-                                decoded_name = decode_header(f_name)[0][0]
-                                if isinstance(decoded_name, bytes):
-                                    f_name = decoded_name.decode('utf-8', errors='ignore')
-                                    
-                                ext = f_name.split('.')[-1].lower() if '.' in f_name else ''
-                                if ext in ['pdf', 'docx']:
-                                    valid_attachments.append({
-                                        "name": f_name, "type": ext.upper(), "raw_data": part.get_payload(decode=True)
-                                    })
-                else:
-                    email_body_text = msg_eml.get_payload(decode=True).decode(msg_eml.get_content_charset() or 'utf-8', errors='ignore')
-            
-            st.success(f"✨ Native EML layout verified and parsed successfully: {base_name}")
-        except Exception as e:
-            st.error(f"EML Parsing Error: {e}")
-
-    if uploaded_msg is not None or uploaded_eml is not None:
-        st.markdown("---")
-        st.markdown('<p class="section-header">Attachment Inventory & Metadata Tracker</p>', unsafe_allow_html=True)
-
-        if valid_attachments:
-            st.info(f"Found total {len(valid_attachments)} actionable document attachment(s) inside this email context.")
-            att_df = pd.DataFrame(valid_attachments)[["name", "type"]]
-            att_df.columns = ["File Name", "Document Type"]
-            st.dataframe(att_df, use_container_width=True)
-        else:
-            st.warning("No valid structural document attachments (.pdf/.docx) detected inside this email structure.")
-
-        st.markdown("---")
+        # DUAL UPLOADER BUTTONS
+        col_msg, col_eml = st.columns(2)
         
-        if st.button("Compile Full Email Package (Body + All Attachments) to PDF ZIP", use_container_width=True):
-            with st.spinner("Executing dynamic PDF rendering algorithms... Please wait..."):
-                try:
-                    zip_buffer = io.BytesIO()
-                    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-                        body_pdf_buffer = io.BytesIO()
-                        doc_template = SimpleDocTemplate(body_pdf_buffer, pagesize=letter, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
-                        styles = getSampleStyleSheet()
-                        
-                        story = []
-                        story.append(Paragraph(f"<b>From:</b> {email_from}", styles['Normal']))
-                        story.append(Paragraph(f"<b>To:</b> {email_to}", styles['Normal']))
-                        story.append(Paragraph(f"<b>Subject:</b> {email_subject}", styles['Normal']))
-                        story.append(Paragraph(f"<b>Date:</b> {email_date}", styles['Normal']))
-                        story.append(Spacer(1, 15))
-                        story.append(Paragraph("<b>--- EMAIL BODY TEXT ---</b>", styles['Normal']))
-                        story.append(Spacer(1, 10))
-                        
-                        for line in email_body_text.split('\n'):
-                            clean_line = line.strip().replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-                            if clean_line:
-                                story.append(Paragraph(clean_line, styles['Normal']))
-                            else:
-                                story.append(Spacer(1, 6))
-                                
-                        doc_template.build(story)
-                        zip_file.writestr("Email_Body_Text.pdf", body_pdf_buffer.getvalue())
+        with col_msg:
+            st.markdown('<p class="section-header">1: Upload msg File</p>', unsafe_allow_html=True)
+            uploaded_msg = st.file_uploader("Upload Document (.msg)", type=["msg"], key="msg_file_uploader")
+            
+        with col_eml:
+            st.markdown('<p class="section-header">2: Upload EML File</p>', unsafe_allow_html=True)
+            uploaded_eml = st.file_uploader("Upload File (.eml)", type=["eml"], key="eml_file_uploader")
 
-                        for att_node in valid_attachments:
-                            file_name = att_node['name']
-                            file_ext = att_node['type'].lower()
-                            binary_data = att_node['raw_data']
-                            
-                            if file_ext == 'pdf':
-                                zip_file.writestr(file_name, binary_data)
-                            elif file_ext == 'docx':
-                                from docx import Document
-                                word_stream = io.BytesIO(binary_data)
-                                doc_obj = Document(word_stream)
-                                
-                                word_pdf_buffer = io.BytesIO()
-                                word_template = SimpleDocTemplate(word_pdf_buffer, pagesize=letter, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
-                                word_story = []
-                                
-                                for para in doc_obj.paragraphs:
-                                    text_html = ""
-                                    for run in para.runs:
-                                        text = run.text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-                                        if run.bold: text = f"<b>{text}</b>"
-                                        if run.italic: text = f"<i>{text}</i>"
-                                        if run.underline: text = f"<u>{text}</u>"
-                                        text_html += text
-                                        
-                                    if text_html.strip():
-                                        p_style = ParagraphStyle(name=f"AttPara_{file_name}", parent=styles['Normal'], fontSize=9.5, leading=14)
-                                        word_story.append(Paragraph(text_html, p_style))
-                                    else:
-                                        word_story.append(Spacer(1, 6))
-                                        
-                                word_template.build(word_story)
-                                clean_pdf_name = f"{file_name.split('.')[0]}.pdf"
-                                zip_file.writestr(clean_pdf_name, word_pdf_buffer.getvalue())
+        # Dynamic variable initialization
+        email_body_text = ""
+        email_subject = "No Subject"
+        email_from = "Unknown Sender"
+        email_to = "Unknown Receiver"
+        email_date = formatdate(localtime=True)
+        valid_attachments = []
+        base_name = "Email_Package"
 
-                    st.success("Full Package Compiled! Email body and all document templates packed securely.")
-                    play_celebration_confetti() 
+        # IF USER UPLOADS MSG FILE 
+        if uploaded_msg is not None:
+            try:
+                with st.spinner("Decoding Outlook MSG binary data streams..."):
+                    msg = extract_msg.Message(uploaded_msg)
+                    email_from = msg.sender or "Unknown Sender"
+                    email_to = msg.to or "Unknown Receiver"
+                    email_subject = msg.subject or "No Subject"
+                    email_body_text = msg.body or ""
+                    base_name = uploaded_msg.name.split('.')[0]
                     
-                    st.download_button(
-                        label="Download Complete Converted PDF Package (ZIP)",
-                        data=zip_buffer.getvalue(),
-                        file_name=f"{base_name}_Full_PDF_Package.zip",
-                        mime="application/zip",
-                        use_container_width=True
-                    )
-                except Exception as e:
-                    st.error(f"Bundle Generation Error: {e}")
+                    # EML backup generator for download button
+                    email_msg_obj = EmailMessage()
+                    email_msg_obj["From"] = email_from
+                    email_msg_obj["To"] = email_to
+                    email_msg_obj["Subject"] = email_subject
+                    email_msg_obj["Date"] = email_date
+                    email_msg_obj.set_content(email_body_text)
+                    eml_bytes = email_msg_obj.as_bytes()
+                
+                st.toast(f"EML Conversion Successful for: {base_name}",)
+                st.success("Outlook Message file compiled to EML standards successfully!")
+                
+                st.download_button(
+                    label="Download Converted EML File",
+                    data=eml_bytes,
+                    file_name=f"{base_name}.eml",
+                    mime="message/rfc822",
+                    use_container_width=True
+                )
+                
+                # Extract attachments from MSG
+                if msg.attachments:
+                    for att in msg.attachments:
+                        f_name = att.longFilename or att.shortFilename
+                        if f_name:
+                            ext = f_name.split('.')[-1].lower() if '.' in f_name else ''
+                            if ext in ['pdf', 'docx']:
+                                valid_attachments.append({"name": f_name, "type": ext.upper(), "raw_data": att.data})
+            except Exception as e:
+                st.error(f"MSG Parsing Error: {e}")
 
+        # IF USER UPLOADS EML FILE DIRECTLY 
+        elif uploaded_eml is not None:
+            try:
+                with st.spinner("Parsing standard EML message vectors..."):
+                    eml_content = uploaded_eml.read()
+                    msg_eml = message_from_bytes(eml_content)
+                    
+                    email_from = msg_eml.get('From', 'Unknown Sender')
+                    email_to = msg_eml.get('To', 'Unknown Receiver')
+                    email_subject = msg_eml.get('Subject', 'No Subject')
+                    email_date = msg_eml.get('Date', formatdate(localtime=True))
+                    base_name = uploaded_eml.name.split('.')[0]
+                    
+                    # Extract EML body content safely
+                    if msg_eml.is_multipart():
+                        for part in msg_eml.walk():
+                            content_type = part.get_content_type()
+                            content_disp = str(part.get("Content-Disposition"))
+                            
+                            # Extract Text body
+                            if content_type == "text/plain" and "attachment" not in content_disp:
+                                try:
+                                    email_body_text += part.get_payload(decode=True).decode(part.get_content_charset() or 'utf-8', errors='ignore')
+                                except:
+                                    pass
+                            # Extract Attachments from EML parts
+                            elif "attachment" in content_disp or part.get_filename():
+                                f_name = part.get_filename()
+                                if f_name:
+                                    # Handle email naming encodes if any
+                                    from email.header import decode_header
+                                    decoded_name = decode_header(f_name)[0][0]
+                                    if isinstance(decoded_name, bytes):
+                                        f_name = decoded_name.decode('utf-8', errors='ignore')
+                                        
+                                    ext = f_name.split('.')[-1].lower() if '.' in f_name else ''
+                                    if ext in ['pdf', 'docx']:
+                                        valid_attachments.append({
+                                            "name": f_name, 
+                                            "type": ext.upper(), 
+                                            "raw_data": part.get_payload(decode=True)
+                                        })
+                    else:
+                        email_body_text = msg_eml.get_payload(decode=True).decode(msg_eml.get_content_charset() or 'utf-8', errors='ignore')
+                
+                st.success(f"✨ Native EML layout verified and parsed successfully: {base_name}")
+            except Exception as e:
+                st.error(f"EML Parsing Error: {e}")
+
+        # COMMON PROCESSING DISPLAY AND GENERATOR FOR BOTH CASES
+        if uploaded_msg is not None or uploaded_eml is not None:
+            st.markdown("---")
+            st.markdown('<p class="section-header">Attachment Inventory & Metadata Tracker</p>', unsafe_allow_html=True)
+
+            # Display Attachment Metrics UI Grid
+            if valid_attachments:
+                st.info(f"Found total {len(valid_attachments)} actionable document attachment(s) inside this email context.")
+                att_df = pd.DataFrame(valid_attachments)[["name", "type"]]
+                att_df.columns = ["File Name", "Document Type"]
+                st.dataframe(att_df, use_container_width=True)
+            else:
+                st.warning("No valid structural document attachments (.pdf/.docx) detected inside this email structure.")
+
+            st.markdown("---")
+            
+            # COMPILE BUNDLE BUTTON
+            if st.button("Compile Full Email Package (Body + All Attachments) to PDF ZIP", use_container_width=True):
+                with st.spinner("Executing dynamic PDF rendering algorithms... Please wait..."):
+                    try:
+                        zip_buffer = io.BytesIO()
+                        
+                        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                            # Convert Email Body Text to PDF
+                            body_pdf_buffer = io.BytesIO()
+                            doc_template = SimpleDocTemplate(body_pdf_buffer, pagesize=letter, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
+                            styles = getSampleStyleSheet()
+                            
+                            story = []
+                            # Email Metadata Header Block
+                            story.append(Paragraph(f"<b>From:</b> {email_from}", styles['Normal']))
+                            story.append(Paragraph(f"<b>To:</b> {email_to}", styles['Normal']))
+                            story.append(Paragraph(f"<b>Subject:</b> {email_subject}", styles['Normal']))
+                            story.append(Paragraph(f"<b>Date:</b> {email_date}", styles['Normal']))
+                            story.append(Spacer(1, 15))
+                            story.append(Paragraph("<b>--- EMAIL BODY TEXT ---</b>", styles['Normal']))
+                            story.append(Spacer(1, 10))
+                            
+                            # Clean lines mapping safely
+                            for line in email_body_text.split('\n'):
+                                clean_line = line.strip().replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                                if clean_line:
+                                    story.append(Paragraph(clean_line, styles['Normal']))
+                                else:
+                                    story.append(Spacer(1, 6))
+                                    
+                            doc_template.build(story)
+                            zip_file.writestr("Email_Body_Text.pdf", body_pdf_buffer.getvalue())
+
+                            #Process and convert all attachments to PDF structure
+                            for att_node in valid_attachments:
+                                file_name = att_node['name']
+                                file_ext = att_node['type'].lower()
+                                binary_data = att_node['raw_data']
+                                
+                                # Attachment is already a PDF
+                                if file_ext == 'pdf':
+                                    zip_file.writestr(file_name, binary_data)
+                                    
+                                # Attachment is a Word Document (.docx)
+                                elif file_ext == 'docx':
+                                    from docx import Document
+                                    word_stream = io.BytesIO(binary_data)
+                                    doc_obj = Document(word_stream)
+                                    
+                                    word_pdf_buffer = io.BytesIO()
+                                    word_template = SimpleDocTemplate(word_pdf_buffer, pagesize=letter, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
+                                    word_story = []
+                                    
+                                    for para in doc_obj.paragraphs:
+                                        text_html = ""
+                                        for run in para.runs:
+                                            text = run.text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                                            if run.bold: text = f"<b>{text}</b>"
+                                            if run.italic: text = f"<i>{text}</i>"
+                                            if run.underline: text = f"<u>{text}</u>"
+                                            text_html += text
+                                            
+                                        if text_html.strip():
+                                            p_style = ParagraphStyle(name=f"AttPara_{file_name}", parent=styles['Normal'], fontSize=9.5, leading=14)
+                                            word_story.append(Paragraph(text_html, p_style))
+                                        else:
+                                            word_story.append(Spacer(1, 6))
+                                            
+                                    word_template.build(word_story)
+                                    clean_pdf_name = f"{file_name.split('.')[0]}.pdf"
+                                    zip_file.writestr(clean_pdf_name, word_pdf_buffer.getvalue())
+
+                        # Trigger Success Layout
+                        st.success("Full Package Compiled! Email body and all document templates packed securely.")
+                        st.download_button(
+                            label="Download Complete Converted PDF Package (ZIP)",
+                            data=zip_buffer.getvalue(),
+                            file_name=f"{base_name}_Full_PDF_Package.zip",
+                            mime="application/zip",
+                            use_container_width=True
+                        )
+                    except Exception as e:
+                        st.error(f"Bundle Generation Error: {e}")
 elif page == "ARS Check Updation":
     st.markdown('<p class="main-title"> ARS Check Updation</p>', unsafe_allow_html=True)
     st.info("Work in progress... This route is a placeholder for the background verification portal automation.")
 
+# BRIDGE ALLOCATION SUITE 
 elif page == "Bridge Allocation":
-    import openpyxl
-    
-    st.markdown('<p class="main-title">Grafana_DATA</p>', unsafe_allow_html=True)
-    st.write("Upload your raw data file to instantly clean duplicates, filter restricted series, and generate a dual-sheet allocation tracker.")
+        import openpyxl
+        
+        st.markdown('<p class="main-title">Grafana_DATA</p>', unsafe_allow_html=True)
+        st.write("Upload your raw data file to instantly clean duplicates, filter restricted series, and generate a dual-sheet allocation tracker.")
 
-    uploaded_alloc_file = st.file_uploader("Upload Queue Data File (.csv, .xlsx)", type=["csv", "xlsx", "xls"], key="alloc_file_uploader")
+        # File Uploader supporting both CSV and Excel format
+        uploaded_alloc_file = st.file_uploader("Upload Queue Data File (.csv, .xlsx)", type=["csv", "xlsx", "xls"], key="alloc_file_uploader")
 
-    if uploaded_alloc_file is not None:
-        try:
-            with st.spinner("Analyzing data streams and mapping core matrices..."):
-                if uploaded_alloc_file.name.endswith('.csv'):
-                    try:
-                        df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", sep=None, engine='python', on_bad_lines='skip')
-                    except Exception:
-                        uploaded_alloc_file.seek(0)
-                        df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", skiprows=4, sep=None, engine='python', on_bad_lines='skip')
-                else:
-                    df_alloc = pd.read_excel(uploaded_alloc_file)
-                
-                df_alloc.columns = df_alloc.columns.str.strip()
-                
-                if len(df_alloc.columns) <= 1:
-                    uploaded_alloc_file.seek(0)
-                    df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", sep='\t', on_bad_lines='skip')
-                    df_alloc.columns = df_alloc.columns.str.strip()
-
-                ars_candidates = [col for col in df_alloc.columns if 'ars' in col.lower() or 'ars no' in col.lower()]
-                ageing_candidates = [col for col in df_alloc.columns if 'ageing' in col.lower() or 'hour' in col.lower()]
-                
-                if ars_candidates:
-                    ars_col = ars_candidates[0]
-                else:
-                    st.error("File 'ARS No'! Please check columns: " + str(df_alloc.columns.tolist()))
-                    st.stop()
-                    
-                if ageing_candidates:
-                    ageing_col = ageing_candidates[0]
-                else:
-                    st.error("File 'Ageing_Hour'! Please check columns: " + str(df_alloc.columns.tolist()))
-                    st.stop()
-                
-                initial_count = len(df_alloc)
-                df_alloc = df_alloc.dropna(subset=[ars_col])
-                df_alloc = df_alloc.drop_duplicates(subset=[ars_col])
-                dedup_count = initial_count - len(df_alloc)
-                
-                df_alloc[ars_col] = df_alloc[ars_col].astype(str).str.strip()
-                df_filtered = df_alloc[~df_alloc[ars_col].str.startswith('2304')].copy()
-                excluded_2304_count = len(df_alloc) - len(df_filtered)
-                
-                df_filtered[ageing_col] = pd.to_numeric(df_filtered[ageing_col], errors='coerce').fillna(0)
-                df_filtered = df_filtered.sort_values(by=ageing_col, ascending=False).reset_index(drop=True)
-                    
-                total_available_rows = len(df_filtered)
-
-            st.markdown('<p class="section-header">Cleaned Queue Analytics</p>', unsafe_allow_html=True)
-            stat_col1, stat_col2, stat_col3 = st.columns(3)
-            with stat_col1:
-                st.metric(label="Total Cases Available for Allocation", value=f"{total_available_rows} rows")
-            with stat_col2:
-                st.metric(label="Duplicate Repeats Cleaned", value=f"{dedup_count} items")
-            with stat_col3:
-                st.metric(label="2304 Series Blocked", value=f"{excluded_2304_count} rows")
-
-            st.markdown("---")
-            st.markdown('<p class="section-header">👥 Team Workload Allocation(5 Slots)</p>', unsafe_allow_html=True)
-            st.info("Enter the User Names and the number of cases you want to allocate to each slot.")
-
-            user_allocations = []
-            for idx in range(1, 6):
-                col_name, col_count = st.columns([3, 2])
-                with col_name:
-                    u_name = st.text_input(f"Slot {idx}: User Name", key=f"u_name_{idx}", placeholder=f"Enter name for user {idx}...")
-                with col_count:
-                    u_count = st.number_input(f"Slot {idx}: No. of Cases", min_value=0, max_value=total_available_rows, step=1, key=f"u_count_{idx}")
-                
-                if u_name.strip() != "" and u_count > 0:
-                    user_allocations.append({"name": u_name.strip(), "count": int(u_count)})
-
-            st.markdown("---")
-
-            if st.button("Process Workload Allocation & Compile XLSX", use_container_width=True):
-                if not user_allocations:
-                    st.warning("Please fill at least one User Name and a valid case count greater than 0 to allocate data!")
-                else:
-                    total_requested_allocation = sum(item['count'] for item in user_allocations)
-                    
-                    if total_requested_allocation > total_available_rows:
-                        st.error(f"Allocation Limit Exceeded! You requested total {total_requested_allocation} cases, but only {total_available_rows} cases are available.")
+        if uploaded_alloc_file is not None:
+            try:
+                with st.spinner("Analyzing data streams and mapping core matrices..."):
+                    # DYNAMIC AUTO-DETECTING FILE LOADING LAYER 
+                    if uploaded_alloc_file.name.endswith('.csv'):
+                        try:
+                            
+                            df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", sep=None, engine='python', on_bad_lines='skip')
+                        except Exception:
+                            uploaded_alloc_file.seek(0)
+                            # Backup engine metadata headers 
+                            df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", skiprows=4, sep=None, engine='python', on_bad_lines='skip')
                     else:
-                        with st.spinner("Slicing data queues and generating dual-sheet tracker framework..."):
-                            current_pointer = 0
-                            allocated_chunks = []
-                            tracker_rows = []
-                            
-                            for alloc in user_allocations:
-                                name = alloc['name']
-                                count = alloc['count']
-                                
-                                sub_df = df_filtered.iloc[current_pointer : current_pointer + count].copy()
-                                
-                                clean_sub_df = pd.DataFrame()
-                                clean_sub_df['Allocated User Name'] = [name] * len(sub_df)
-                                clean_sub_df['ARS No'] = sub_df[ars_col].values
-                                
-                                allocated_chunks.append(clean_sub_df)
-                                
-                                tracker_rows.append({
-                                    "Allocated User Name": name,
-                                    "Allocated Case Count": count
-                                })
-                                
-                                current_pointer += count
-                            
-                            final_allocation_df = pd.concat(allocated_chunks, ignore_index=True)
-                            final_tracker_df = pd.DataFrame(tracker_rows)
-                            
-                            st.success(f"Process Completed! Distributed {total_requested_allocation} cases among {len(user_allocations)} team members.")
-                            play_celebration_confetti() 
+                        df_alloc = pd.read_excel(uploaded_alloc_file)
+                    
+                    df_alloc.columns = df_alloc.columns.str.strip()
+                    
+                    # Tab Fallback verification 
+                    if len(df_alloc.columns) <= 1:
+                        uploaded_alloc_file.seek(0)
+                        df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", sep='\t', on_bad_lines='skip')
+                        df_alloc.columns = df_alloc.columns.str.strip()
 
-                            st.markdown('<p class="section-header">Live Allocation Summary Record</p>', unsafe_allow_html=True)
-                            st.dataframe(final_tracker_df, use_container_width=True)
-                            
-                            st.markdown('<p class="section-header">Data Output Preview (Top 5 Rows)</p>', unsafe_allow_html=True)
-                            st.dataframe(final_allocation_df.head(5), use_container_width=True)
-                            
-                            excel_buffer = io.BytesIO()
-                            with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
-                                final_allocation_df.to_excel(writer, index=False, sheet_name='Allocation_List')
-                                final_tracker_df.to_excel(writer, index=False, sheet_name='Allocation_Tracker')
-                                
-                            excel_output = excel_buffer.getvalue()
-                            
-                            st.download_button(
-                                label="Download Allocated XLSX File (Dual Sheets Loaded)",
-                                data=excel_output,
-                                file_name="I_Bridge_Allocation.xlsx",
-                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                                use_container_width=True
-                            )
+                    # SAFE COLUMN IDENTIFICATION 
+                    ars_candidates = [col for col in df_alloc.columns if 'ars' in col.lower() or 'ars no' in col.lower()]
+                    ageing_candidates = [col for col in df_alloc.columns if 'ageing' in col.lower() or 'hour' in col.lower()]
+                    
+                    if ars_candidates:
+                        ars_col = ars_candidates[0]
+                    else:
+                        st.error("File 'ARS No'! Please check columns: " + str(df_alloc.columns.tolist()))
+                        st.stop()
+                        
+                    if ageing_candidates:
+                        ageing_col = ageing_candidates[0]
+                    else:
+                        st.error("File 'Ageing_Hour'! Please check columns: " + str(df_alloc.columns.tolist()))
+                        st.stop()
+                    
+                    #REMOVE DUPLICATED ARS NUMBERS 
+                    initial_count = len(df_alloc)
+                    df_alloc = df_alloc.dropna(subset=[ars_col])
+                    df_alloc = df_alloc.drop_duplicates(subset=[ars_col])
+                    dedup_count = initial_count - len(df_alloc)
+                    
+                    #Exclude ARS numbers starting with '2304'
+                    df_alloc[ars_col] = df_alloc[ars_col].astype(str).str.strip()
+                    df_filtered = df_alloc[~df_alloc[ars_col].str.startswith('2304')].copy()
+                    excluded_2304_count = len(df_alloc) - len(df_filtered)
+                    
+                    #SORT BY AGEING HOUR (Highest ageing hours first for SLA safety)
+                    df_filtered[ageing_col] = pd.to_numeric(df_filtered[ageing_col], errors='coerce').fillna(0)
+                    df_filtered = df_filtered.sort_values(by=ageing_col, ascending=False).reset_index(drop=True)
+                        
+                    total_available_rows = len(df_filtered)
 
-        except Exception as e:
-            st.error(f"Allocation Engine Failed: {e}")
+                # Show Live Queue Analytics Cards
+                st.markdown('<p class="section-header">Cleaned Queue Analytics</p>', unsafe_allow_html=True)
+                stat_col1, stat_col2, stat_col3 = st.columns(3)
+                with stat_col1:
+                    st.metric(label="Total Cases Available for Allocation", value=f"{total_available_rows} rows")
+                with stat_col2:
+                    st.metric(label="Duplicate Repeats Cleaned", value=f"{dedup_count} items")
+                with stat_col3:
+                    st.metric(label="2304 Series Blocked", value=f"{excluded_2304_count} rows")
+
+                st.markdown("---")
+                st.markdown('<p class="section-header">👥 Team Workload Allocation(5 Slots)</p>', unsafe_allow_html=True)
+                st.info("Enter the User Names and the number of cases you want to allocate to each slot.")
+
+                # Input Slots configuration
+                user_allocations = []
+                for idx in range(1, 6):
+                    col_name, col_count = st.columns([3, 2])
+                    with col_name:
+                        u_name = st.text_input(f"Slot {idx}: User Name", key=f"u_name_{idx}", placeholder=f"Enter name for user {idx}...")
+                    with col_count:
+                        u_count = st.number_input(f"Slot {idx}: No. of Cases", min_value=0, max_value=total_available_rows, step=1, key=f"u_count_{idx}")
+                    
+                    if u_name.strip() != "" and u_count > 0:
+                        user_allocations.append({"name": u_name.strip(), "count": int(u_count)})
+
+                st.markdown("---")
+
+                # TRIGGER ALLOCATION PROCESSING PIPELINE
+                if st.button("Process Workload Allocation & Compile XLSX", use_container_width=True):
+                    if not user_allocations:
+                        st.warning("Please fill at least one User Name and a valid case count greater than 0 to allocate data!")
+                    else:
+                        total_requested_allocation = sum(item['count'] for item in user_allocations)
+                        
+                        if total_requested_allocation > total_available_rows:
+                            st.error(f"Allocation Limit Exceeded! You requested total {total_requested_allocation} cases, but only {total_available_rows} cases are available.")
+                        else:
+                            with st.spinner("Slicing data queues and generating dual-sheet tracker framework..."):
+                                current_pointer = 0
+                                allocated_chunks = []
+                                tracker_rows = []
+                                
+                                # Process slicing logic over data rows array
+                                for alloc in user_allocations:
+                                    name = alloc['name']
+                                    count = alloc['count']
+                                    
+                                    # Extract the exact slice block for this user
+                                    sub_df = df_filtered.iloc[current_pointer : current_pointer + count].copy()
+                                    
+                                    # Create a clean DataFrame with ONLY Allocated User Name and No
+                                    clean_sub_df = pd.DataFrame()
+                                    clean_sub_df['Allocated User Name'] = [name] * len(sub_df)
+                                    clean_sub_df['ARS No'] = sub_df[ars_col].values
+                                    
+                                    allocated_chunks.append(clean_sub_df)
+                                    
+                                    # Tracking Summary row block append
+                                    tracker_rows.append({
+                                        "Allocated User Name": name,
+                                        "Allocated Case Count": count
+                                    })
+                                    
+                                    # Move pointer forward
+                                    current_pointer += count
+                                
+                                # Consolidate Main Allocation Data List
+                                final_allocation_df = pd.concat(allocated_chunks, ignore_index=True)
+                                
+                                # Create Summary Tracking DataFrame
+                                final_tracker_df = pd.DataFrame(tracker_rows)
+                                
+                                st.success(f"Process Completed! Distributed {total_requested_allocation} cases among {len(user_allocations)} team members.")
+                                
+                                # UI Summary Record Display
+                                st.markdown('<p class="section-header">Live Allocation Summary Record</p>', unsafe_allow_html=True)
+                                st.dataframe(final_tracker_df, use_container_width=True)
+                                
+                                # Show preview of assigned breakdown configurations
+                                st.markdown('<p class="section-header">Data Output Preview (Top 5 Rows)</p>', unsafe_allow_html=True)
+                                st.dataframe(final_allocation_df.head(5), use_container_width=True)
+                                
+                                # Create an in-memory excel stream with DUAL SHEETS using openpyxl
+                                excel_buffer = io.BytesIO()
+                                with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+                                    # Just User Name and ARS No
+                                    final_allocation_df.to_excel(writer, index=False, sheet_name='Allocation_List')
+                                    # The static verification tracker counts record
+                                    final_tracker_df.to_excel(writer, index=False, sheet_name='Allocation_Tracker')
+                                    
+                                excel_output = excel_buffer.getvalue()
+                                
+                                # Download button for compiled sheet
+                                st.download_button(
+                                    label="Download Allocated XLSX File (Dual Sheets Loaded)",
+                                    data=excel_output,
+                                    file_name="I_Bridge_Allocation.xlsx",
+                                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                    use_container_width=True
+                                )
+
+            except Exception as e:
+                st.error(f"Allocation Engine Failed: {e}")
                 
 elif page == "About Tool":
     st.markdown('<p class="main-title">⚙️ About Automation Utility Tool</p>', unsafe_allow_html=True)
@@ -1022,3 +1145,4 @@ elif page == "About Tool":
     ### 🛡️ Secure Core Infrastructure Strategy
     To ensure complete alignment with data safety standards, this application executes entirely within the local machine's volatile memory (RAM) and local CPU. This **Client-Side execution design** guarantees zero data exposure, ensures strict compliance with corporate Data Loss Prevention (DLP) frameworks, and allows smooth execution without external cloud endpoints.
     """)
+    
