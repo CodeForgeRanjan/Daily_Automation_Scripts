@@ -389,7 +389,7 @@ if page == "Data Upload":
 play_celebration_confetti() # <-- Ekdum perfect seedh mein!
 
 #  IMAGE & DOCS CONVERTED (ZIP + AUTO-ROTATE ENABLED) 
- elif page == "Image And Docs Converted":
+elif page == "Image And Docs Converted":
     import zipfile  
     from PIL import ImageOps  
     
