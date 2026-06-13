@@ -1,37 +1,57 @@
-# Multi-Utility Automation Pipeline Tool
+# 🚗 Multi-Utility Automation Pipeline Tool
 
-A cloud-based automated system built using **Python (Streamlit & Pandas)** to optimize and completely eliminate manual operations in background  data pipelines. 
-
-##  Key Features
-
-### 1. Uber BGC Data CleanUp
-- **Data Ingestion Alignment:** Maps and re-orders raw CSV inputs directly into system-compatible portal schemas.
-- **Name & Address Sanitization:** Auto-strips system-breaking phrases (e.g., *Aadhar Address, DL-, Present Address, Agreement*) and applies standard title-casing.
-- **Smart Pincode Regex Extraction:** Extracts 6-digit Pincodes even when fused directly with letters or words.
-- **Automated Master Mapping (VLOOKUP):** Instantly merges master databases to update City Names and District System IDs.
-- **Conditional Data Fallback:** Automatically replaces missing Pincodes and 'NA' Cities with system default **`8440`** to prevent ingestion failure.
-
-### 2. Bulk Image to PDF Converter
-- Accepts batch uploads of `.png`, `.jpg`, and `.jpeg`.
-- Merges separate document/ID scans into a single compiled `.pdf` file.
-- Handles transparent PNG backgrounds (RGBA to RGB conversion) automatically.
+A high-performance, secure automation hub built using **Python (Streamlit & Pandas)** designed to eliminate manual data-entry bottlenecks and optimize background verification (BGV) operations.
 
 ---
 
-##  Tech Stack & Architecture
-- **Frontend / UI:** Streamlit Web Framework
-- **Data Processing Engine:** Python Pandas & NumPy
-- **String Manipulation:** Advanced Regular Expressions (Regex)
-- **Image Conversion Engine:** Pillow (PIL)
+## 🛠️ Key Core Modules
+
+### 📈 1. I-Bridge Workload Allocator (Smart Queue Distribution)
+This module automates the manual dispatching of verification cases among team members, ensuring strict adherence to SLA timelines.
+- **⚡ Dynamic File Ingestion:** Auto-detects and parses raw input streams seamlessly from both `.csv` (handling broken lines/tab fallbacks) and `.xlsx` structures.
+- **🧹 Duplicate Clean-Up Layer:** Automatically scans the incoming queue, flags repetitive records, and retains exactly **1 unique case** per applicant to prevent double allocation.
+- **🚫 Restricted Series Filtering:** Instantly detects and purges restricted case sequences (e.g., blocking rows starting with **`2304` series**) based on operational compliance rules.
+- **⏳ SLA-First Smart Sorting:** Automatically converts ageing indicators or hour matrices into numeric formats and sorts the entire queue in **Descending Order** (highest ageing hours first) to secure urgent cases.
+- **👥 Multi-Slot Workload Balancing:** Distributes rows dynamically into customized slices based on user-defined slot names and case limits.
+- **📊 Dual-Sheet Tracker Output:** Generates a professional, production-ready `.xlsx` file using `openpyxl` with two distinct sheets:
+  1. `Allocation_List`: Clean mapping of *Allocated User Name* and *ARS No*.
+  2. `Allocation_Tracker`: Live operational summary showing exact *Case Counts* per user.
+
+### 🧹 2. BGC Data CleanUp Dashboard
+- **Data Ingestion Alignment:** Maps and re-orders raw data rows directly into target portal schemas.
+- **Name & Address Sanitization:** Auto-purges system-breaking phrases (e.g., *Aadhar Address, DL-, Present Address, Agreement*) using intelligent regex, applying standard Proper Title Case.
+- **Smart Pincode Regex Extraction:** Isolates 6-digit postal codes instantly, even when compressed inside stuck text frames.
+- **Automated Master Mapping:** Performs an in-memory VLOOKUP merge against the Master Database to auto-populate City Names and District System IDs.
+- **Conditional Data Fallback:** Automatically replaces missing references with the system default fallback code **`8440`** to guarantee 100% ingestion success.
+
+### 📄 3. Bulk Image to PDF Converter Hub
+- **Multi-File Batch Processing:** Accepts parallel uploads of `.png`, `.jpg`, `.jpeg`, and `.docx` files.
+- **🔄 Smart Auto-Orientation (EXIF Fix):** Detects if a document scan is flipped upside down or sideways and automatically restores it to an upright portrait position.
+- **📐 Standardized A4 Layout Scaling:** Automatically scales skewed document images into a clean, uniform A4 profile using advanced LANCZOS resampling.
+- **📦 One-Click ZIP Archiving:** Compiles standalone file transforms in background memory and packs them into a single downloadable `.zip` package.
 
 ---
 
-##  Local Setup and Deployment
+## 🏗️ Tech Stack & Architecture
+
+* **🖥️ UI / Frontend Framework:** `Streamlit` (Interactive Web Architecture)
+* **⚙️ Core Engine:** `Python Pandas` & `NumPy` (Vectorized Data Manipulation)
+* **🗄️ Excel Automation:** `OpenPyXL` (Multi-Sheet Matrix Formatting)
+* **🔍 String Pattern Engine:** `Advanced Regular Expressions (Regex)`
+* **🖼️ Image Processing:** `Pillow (PIL)` & `ImageOps` (EXIF Alignment & A4 Resampling)
+
+---
+
+## 🌐 Local Setup & Zero-Dependency Deployment
+
+### 🛡️ Core Infrastructure Strategy
+This application is designed under a **Local-First Server Architecture** (`http://localhost:8501`). By running entirely within the local machine's RAM and CPU, the application processes files without data packets ever leaving the machine. This effectively bypasses restrictive enterprise proxy filters, Zscaler loops, and DLP (Data Loss Prevention) blocks, ensuring safe, high-speed corporate execution.
 
 ### 1. Prerequisites
-Ensure Python installed on your local machine.
+Ensure Python is installed on your local machine.
 
 ### 2. Installation
-Clone the repository and install the required tracking libraries:
+Clone this repository to your local directory and install the necessary dependencies:
+
 ```bash
-pip install -r requirements.txt
+py -m pip install streamlit pandas openpyxl rapidfuzz pillow python-docx reportlab extract_msg
