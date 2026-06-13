@@ -5,6 +5,37 @@ import io
 from PIL import Image
 from rapidfuzz import process, utils # Fast Fuzzy matching
 
+def play_celebration_confetti():
+    """Poori screen par patakhe phodne ke liye custom JavaScript inject engine"""
+    st.components.v1.html(
+        """
+        <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+        <script>
+            // Blast 1: Left Side Se
+            confetti({
+                particleCount: 150,
+                spread: 80,
+                origin: { x: 0, y: 0.6 }
+            });
+            // Blast 2: Right Side Se
+            confetti({
+                particleCount: 150,
+                spread: 80,
+                origin: { x: 1, y: 0.6 }
+            });
+            // Blast 3: Center Se Thoda Oopar
+            setTimeout(() => {
+                confetti({
+                    particleCount: 200,
+                    spread: 100,
+                    origin: { y: 0.4 }
+                });
+            }, 300);
+        </script>
+        """,
+        height=0, # Isse background mein silently chalega, screen par koi khali box nahi dikhega
+    )
+
 # Page Setup & Styling
 st.set_page_config(page_title="Multi-Utility Automation Tool", page_icon="🚗", layout="wide")
 
@@ -354,6 +385,14 @@ if page == "Data Upload":
             
     elif my_file is not None and master_file is None:
         st.info(" Please upload the Master file to process automatic City & City ID mapping.")
+                    
+            # --- CELEBRATION BLAST START ---
+            play_celebration_confetti()
+            # -------------------------------
+
+            # Live Metric Cards iske baad chalenge...
+
+
 
 #  IMAGE & DOCS CONVERTED (ZIP + AUTO-ROTATE ENABLED) 
 elif page == "Image And Docs Converted":
