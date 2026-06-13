@@ -385,9 +385,8 @@ if page == "Data Upload":
             
     elif my_file is not None and master_file is None:
         st.info(" Please upload the Master file to process automatic City & City ID mapping.")
-                    
-            # --- CELEBRATION BLAST START ---
-            play_celebration_confetti()
+                     # --- CELEBRATION BLAST START ---
+                   play_celebration_confetti()
             # -------------------------------
 
             # Live Metric Cards iske baad chalenge...
