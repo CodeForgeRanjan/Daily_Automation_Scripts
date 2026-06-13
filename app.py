@@ -41,7 +41,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- GLOBAL SHORT NAMES MAPPING DICTIONARY (FIXED ERROR JAD SE KHATAM) ---
+# --- GLOBAL SHORT NAMES MAPPING DICTIONARY
 CITY_ALIAS_MAP = {
     "hyd": "Hyderabad",
     "blr": "Bangalore",
@@ -68,7 +68,7 @@ def clean_address(text):
     text = "".join(ch for ch in str(text).strip() if ch.isprintable())
 
 
-    # --- NEW ADVANCED HYPERLINK / DRIVE LINK REMOVAL LAYER ---
+    # NEW ADVANCED HYPERLINK / DRIVE LINK REMOVAL LAYER ---
     url_pattern = r'(https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b[-a-zA-Z0-9()@:%_\+.~#?&//=]*)|(www\.[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b[-a-zA-Z0-9()@:%_\+.~#?&//=]*)|(drive\.google\.com\/[^\s]*)'
     text = re.sub(url_pattern, '', text, flags=re.IGNORECASE)
     
@@ -76,7 +76,7 @@ def clean_address(text):
     text = re.sub(r'\b(?:drive\s*link|link|url)[:.-]?\s*_*', '', text, flags=re.IGNORECASE)
     
 
-    # --- NEW ADVANCED MOBILE NUMBER REMOVAL LAYER 
+    # MOBILE NUMBER REMOVAL LAYER 
     text = re.sub(r'\b\d{5}[-\s]?\d{5}\b', '', text)
     
     unwanted_mobile_patterns = [
@@ -137,16 +137,15 @@ def remove_illegal_chars(val):
         return ""
     return "".join(ch for ch in str(val) if ch.isprintable())
 
-# --- FUZZY MATCHING HELPER ENGINE ---
+#  FUZZY MATCHING HELPER ENGINE 
 def find_closest_city_id(detected_district, master_unique_df):
     """It will take the ID of the closest match by comparing the string from the list of all unique districts."""
     if not detected_district or detected_district == "NA":
         return "NA"
     
-    # Lifting Unique District Choices from Master File
     master_districts = master_unique_df['DISTRICT'].dropna().astype(str).tolist()
     
-    # RapidFuzz engine top closest string match 
+    # RapidFuzz engine 
     match_result = process.extractOne(
         detected_district, 
         master_districts, 
@@ -165,7 +164,7 @@ def find_closest_city_id(detected_district, master_unique_df):
 
 #  SIDEBAR NAVIGATION
 st.sidebar.markdown('<p class="sidebar-heading">Navigation Menu</p>', unsafe_allow_html=True)
-page = st.sidebar.radio("Go to:", ["Data Upload", "Image And Docs Converted", "MSG Conversion", "ARS Check Updation" ,"I bridge Allocation","About Tool"])
+page = st.sidebar.radio("Go to:", ["Data Upload", "Image And Docs Converted", "MSG Conversion", "ARS Check Updation" ,"Bridge Allocation","About Tool"])
 
 
 if page == "Data Upload":
@@ -186,7 +185,6 @@ if page == "Data Upload":
         master_file = st.file_uploader("Upload Pincode Master File", type=["xlsx", "xls"], key="master_file", label_visibility="collapsed")
 
     if my_file is not None and master_file is not None:
-        # Clear button layout with custom style
         st.markdown("---")
         if st.button("Reset System & Clear Cache", use_container_width=True):
             st.cache_data.clear()
@@ -247,12 +245,10 @@ if page == "Data Upload":
                 else:
                     final['City'] = "NA"       
 
-                # Dynamic help column definition for logging fallback references
                 final['City_Name_Raw'] = df['DISTRICT'].fillna('NA')
 
-# --- ADVANCED SHORT NAMES & INTELLECTUAL DISTRICT RE-CORRECTION LAYER ---
+# ADVANCED SHORT NAMES & INTELLECTUAL DISTRICT RE-CORRECTION LAYER 
                 fuzzy_counter = 0
-                # Remove duplicate districts and update a clean reference directory
                 master_district_unique = master_df.drop_duplicates(subset=['DISTRICT']).copy()
                 
                 for idx, row in final.iterrows():
@@ -277,11 +273,10 @@ if page == "Data Upload":
                     
                         # If the target is identified by the city name of the address, apply the mapping
                         if detected_target:
-                            # Filter all rows of that matched district from master file (column match)
                             matched_rows = master_df[master_df['DISTRICT'].astype(str).str.lower() == detected_target.lower()]
                             
                             if not matched_rows.empty:
-                                # City ID update (Column E)
+                                # City ID update 
                                 target_city_id = format_id(matched_rows.iloc[0]['City ID/District ID'])
                                 target_district_name = matched_rows.iloc[0]['DISTRICT']
                                 
@@ -289,7 +284,7 @@ if page == "Data Upload":
                                 final.at[idx, 'City_Name_Raw'] = target_district_name
                                 fuzzy_counter += 1
                                 
-                                    # Pincode Recovery: If Pincode is blank or 'NA', then enter the code of this city from the master file (from column B)
+                                    # Pincode Recovery: If Pincode is blank or 'NA', then enter the code of this city from the master file 
                                 current_pin = str(final.at[idx, 'Pin_Code']).strip()
                                 if current_pin == '' or current_pin == 'NA' or pd.isna(final.at[idx, 'Pin_Code']):
                                     # Pick up the first valid pin code of that district from the master sheet
@@ -345,8 +340,8 @@ if page == "Data Upload":
 
 #  IMAGE & DOCS CONVERTED (ZIP + AUTO-ROTATE ENABLED) 
 elif page == "Image And Docs Converted":
-    import zipfile  # Create a Zip folder for inbuilt module
-    from PIL import ImageOps  # Automate rotation images
+    import zipfile  
+    from PIL import ImageOps  
     
     st.markdown('<p class="main-title">Document & Image to PDF Converter Hub</p>', unsafe_allow_html=True)
     st.write("Convert single images with auto-rotation, merge multiple images, or bulk-transform Word files into PDFs with a single 'Download All' Zip option.")
@@ -357,9 +352,6 @@ elif page == "Image And Docs Converted":
     with tab1:
         st.subheader("Convert Individual Images to Separate PDFs")
         single_images = st.file_uploader("Upload Images (Individual Conversion)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="single_key")
-        
-        # if single_images:
-        #     st.info(f"Total {len(single_images)} image(s) uploaded.")
 
         if single_images:
             st.success(f"Total {len(single_images)} image(s) uploaded successfully.")
@@ -405,7 +397,7 @@ elif page == "Image And Docs Converted":
                                     img_data = io.BytesIO(uploaded_img.read())
                                     img = Image.open(img_data)
                                     
-                                    # Auto-rotate fix for flipped dimensions (E.g. 1166x1600 rotation)
+                                    # Auto-rotate fix for flipped dimensions
                                     img = ImageOps.exif_transpose(img)
                                     img = img.convert('RGB')
                                     img.thumbnail((1240, 1754), Image.Resampling.LANCZOS)
@@ -464,7 +456,7 @@ elif page == "Image And Docs Converted":
                 except Exception as e:
                     st.error(f"Merge failed: {e}")
 
-  #  UNIVERSAL WORD DOCS TO PDF (EXACT MIRROR COPY) 
+  #  UNIVERSAL WORD DOCS TO PDF 
     with tab3:
         st.markdown('<p class="section-header">Direct Word Document (.docx) to PDF Bulk Converter</p>', unsafe_allow_html=True)
         word_files = st.file_uploader("Upload Word Documents (.docx)", type=["docx"], accept_multiple_files=True, key="word_key")
@@ -485,7 +477,7 @@ elif page == "Image And Docs Converted":
                 align_map = {0: TA_LEFT, 1: TA_CENTER, 2: TA_RIGHT, 3: TA_JUSTIFY}
                 normal_style = styles['Normal']
                 
-                # Function that removes inner formatting of text (Bold, Italic, Underline, Checkbox)
+                # Function that removes inner formatting of text 
                 def get_clean_html_text(para):
                     text_html = ""
                     for run in para.runs:
@@ -510,7 +502,7 @@ elif page == "Image And Docs Converted":
                 element_index = 0
                 
                 for child in body_elements:
-                    # 1. PARAGRAPH PROCESSING (Universal Rules)
+                    # PARAGRAPH PROCESSING 
                     if child.tag.endswith('p'):
                         from docx.text.paragraph import Paragraph as DocxParagraph
                         para = DocxParagraph(child, doc)
@@ -520,7 +512,7 @@ elif page == "Image And Docs Converted":
                             story.append(Spacer(1, 6))
                             continue
                         
-                        # if there are large tabs/spaces between text (compatible with every client)
+                        # if there are large tabs/spaces between text
                         if "\t" in para.text or "   " in para.text:
                             parts = [p.strip() for p in re.split(r'\t+|\s{3,}', para.text) if p.strip()]
                             if len(parts) >= 2:
@@ -546,7 +538,7 @@ elif page == "Image And Docs Converted":
                         text_html = get_clean_html_text(para)
                         p_align = align_map.get(para.alignment, TA_LEFT) if para.alignment is not None else TA_LEFT
                         
-                        # It will dynamically scale according to the size/style selected by the user in the Word file.
+                        # It will dynamically scale according to the size/style 
                         p_style = ParagraphStyle(
                             name=f'UniversalPara_{element_index}',
                             parent=normal_style,
@@ -584,19 +576,19 @@ elif page == "Image And Docs Converted":
                         
                         if table_data:
                             num_cols = len(table_data[0])
-                            # Auto-adjust column width based on columns count (Standard for any client table)
+                            # Auto-adjust column width based on columns count 
                             col_widths = [504 / num_cols] * num_cols
                             
                             pdf_table = Table(table_data, colWidths=col_widths, repeatRows=1)
                             pdf_table.setStyle(TableStyle([
-                                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#F9FAFB')), # clean header
+                                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#F9FAFB')), 
                                 ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                                 ('TOPPADDING', (0, 0), (-1, -1), 5),
                                 ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
                                 ('LEFTPADDING', (0, 0), (-1, -1), 5),
                                 ('RIGHTPADDING', (0, 0), (-1, -1), 5),
-                                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#D1D5DB')), # Standard corporate borders
+                                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#D1D5DB')),
                             ]))
                             story.append(Spacer(1, 6))
                             story.append(pdf_table)
@@ -632,7 +624,7 @@ elif page == "Image And Docs Converted":
                     except Exception as e:
                         st.error(f"Conversion Error: {e}")
             
-            # Bulk Processing Archiver (Multiple Files with ZIP)
+            # Bulk Processing Archiver
             else:
                 if st.button("Bulk Convert All Docs & Archive to ZIP", key="bulk_word_zip_btn", use_container_width=True):
                     try:
@@ -665,7 +657,7 @@ elif page == "Image And Docs Converted":
                     except Exception as e:
                         st.error(f"Bulk engine failure: {e}")
 
-# ----------------- PAGE: MSG & EML CONVERSION TO PDF SUITE -----------------
+# PAGE: MSG & EML CONVERSION TO PDF SUITE 
 elif page == "MSG Conversion":
         import extract_msg
         import zipfile
@@ -699,7 +691,7 @@ elif page == "MSG Conversion":
         valid_attachments = []
         base_name = "Email_Package"
 
-        # --- CASE 1: IF USER UPLOADS MSG FILE ---
+        # IF USER UPLOADS MSG FILE 
         if uploaded_msg is not None:
             try:
                 with st.spinner("Decoding Outlook MSG binary data streams..."):
@@ -741,7 +733,7 @@ elif page == "MSG Conversion":
             except Exception as e:
                 st.error(f"MSG Parsing Error: {e}")
 
-        # --- IF USER UPLOADS EML FILE DIRECTLY ---
+        # IF USER UPLOADS EML FILE DIRECTLY 
         elif uploaded_eml is not None:
             try:
                 with st.spinner("Parsing standard EML message vectors..."):
@@ -790,7 +782,7 @@ elif page == "MSG Conversion":
             except Exception as e:
                 st.error(f"EML Parsing Error: {e}")
 
-        # --- COMMON PROCESSING DISPLAY AND GENERATOR FOR BOTH CASES ---
+        # COMMON PROCESSING DISPLAY AND GENERATOR FOR BOTH CASES
         if uploaded_msg is not None or uploaded_eml is not None:
             st.markdown("---")
             st.markdown('<p class="section-header">Attachment Inventory & Metadata Tracker</p>', unsafe_allow_html=True)
@@ -813,7 +805,7 @@ elif page == "MSG Conversion":
                         zip_buffer = io.BytesIO()
                         
                         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-                            # A. Convert Email Body Text to PDF
+                            # Convert Email Body Text to PDF
                             body_pdf_buffer = io.BytesIO()
                             doc_template = SimpleDocTemplate(body_pdf_buffer, pagesize=letter, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
                             styles = getSampleStyleSheet()
@@ -839,17 +831,17 @@ elif page == "MSG Conversion":
                             doc_template.build(story)
                             zip_file.writestr("Email_Body_Text.pdf", body_pdf_buffer.getvalue())
 
-                            # B. Process and convert all attachments to PDF structure
+                            #Process and convert all attachments to PDF structure
                             for att_node in valid_attachments:
                                 file_name = att_node['name']
                                 file_ext = att_node['type'].lower()
                                 binary_data = att_node['raw_data']
                                 
-                                # Case I: Attachment is already a PDF
+                                # Attachment is already a PDF
                                 if file_ext == 'pdf':
                                     zip_file.writestr(file_name, binary_data)
                                     
-                                # Case II: Attachment is a Word Document (.docx)
+                                # Attachment is a Word Document (.docx)
                                 elif file_ext == 'docx':
                                     from docx import Document
                                     word_stream = io.BytesIO(binary_data)
@@ -893,11 +885,11 @@ elif page == "ARS Check Updation":
     st.markdown('<p class="main-title"> ARS Check Updation</p>', unsafe_allow_html=True)
     st.info("Work in progress... This route is a placeholder for the background verification portal automation.")
 
-# ----------------- PAGE: I BRIDGE ALLOCATION SUITE -----------------
-elif page == "I bridge Allocation":
+# BRIDGE ALLOCATION SUITE 
+elif page == "bridge Allocation":
         import openpyxl
         
-        st.markdown('<p class="main-title">I-Bridge Workload Allocator</p>', unsafe_allow_html=True)
+        st.markdown('<p class="main-title">Grafana_DATA</p>', unsafe_allow_html=True)
         st.write("Upload your raw data file to instantly clean duplicates, filter restricted series, and generate a dual-sheet allocation tracker.")
 
         # File Uploader supporting both CSV and Excel format
@@ -906,7 +898,7 @@ elif page == "I bridge Allocation":
         if uploaded_alloc_file is not None:
             try:
                 with st.spinner("Analyzing data streams and mapping core matrices..."):
-                    # --- 1. DYNAMIC AUTO-DETECTING FILE LOADING LAYER ---
+                    # DYNAMIC AUTO-DETECTING FILE LOADING LAYER 
                     if uploaded_alloc_file.name.endswith('.csv'):
                         try:
                             
@@ -918,7 +910,6 @@ elif page == "I bridge Allocation":
                     else:
                         df_alloc = pd.read_excel(uploaded_alloc_file)
                     
-                    # Clean column names for case sensitivity issues
                     df_alloc.columns = df_alloc.columns.str.strip()
                     
                     # Tab Fallback verification 
@@ -927,7 +918,7 @@ elif page == "I bridge Allocation":
                         df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", sep='\t', on_bad_lines='skip')
                         df_alloc.columns = df_alloc.columns.str.strip()
 
-                    # --- 2. SAFE COLUMN IDENTIFICATION (FIX FOR INDEX OUT OF BOUNDS) ---
+                    # SAFE COLUMN IDENTIFICATION 
                     ars_candidates = [col for col in df_alloc.columns if 'ars' in col.lower() or 'ars no' in col.lower()]
                     ageing_candidates = [col for col in df_alloc.columns if 'ageing' in col.lower() or 'hour' in col.lower()]
                     
@@ -942,9 +933,8 @@ elif page == "I bridge Allocation":
                     else:
                         st.error("File 'Ageing_Hour'! Please check columns: " + str(df_alloc.columns.tolist()))
                         st.stop()
-                    # --------------------------------------------------------------------
                     
-                    #REMOVE DUPLICATED ARS NUMBERS (Strict rule: pick only 1 out of multiple repeats)
+                    #REMOVE DUPLICATED ARS NUMBERS 
                     initial_count = len(df_alloc)
                     df_alloc = df_alloc.dropna(subset=[ars_col])
                     df_alloc = df_alloc.drop_duplicates(subset=[ars_col])
@@ -1012,7 +1002,7 @@ elif page == "I bridge Allocation":
                                     # Extract the exact slice block for this user
                                     sub_df = df_filtered.iloc[current_pointer : current_pointer + count].copy()
                                     
-                                    # Create a clean DataFrame with ONLY Allocated User Name and ARS No
+                                    # Create a clean DataFrame with ONLY Allocated User Name and No
                                     clean_sub_df = pd.DataFrame()
                                     clean_sub_df['Allocated User Name'] = [name] * len(sub_df)
                                     clean_sub_df['ARS No'] = sub_df[ars_col].values
@@ -1047,9 +1037,9 @@ elif page == "I bridge Allocation":
                                 # Create an in-memory excel stream with DUAL SHEETS using openpyxl
                                 excel_buffer = io.BytesIO()
                                 with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
-                                    # Sheet 1: Just User Name and ARS No
+                                    # Just User Name and ARS No
                                     final_allocation_df.to_excel(writer, index=False, sheet_name='Allocation_List')
-                                    # Sheet 2: The static verification tracker counts record
+                                    # The static verification tracker counts record
                                     final_tracker_df.to_excel(writer, index=False, sheet_name='Allocation_Tracker')
                                     
                                 excel_output = excel_buffer.getvalue()
@@ -1067,34 +1057,42 @@ elif page == "I bridge Allocation":
                 st.error(f"Allocation Engine Failed: {e}")
                 
 elif page == "About Tool":
-    st.markdown('<p class="main-title"> About Automation Utility Tool</p>', unsafe_allow_html=True)
+    st.markdown('<p class="main-title">⚙️ About Automation Utility Tool</p>', unsafe_allow_html=True)
     
     st.markdown("""
-    ###  Overview
-    This central automation hub replaces slow, manual Excel workflows and legacy VBA macros with high-speed, secure **Python & Pandas cloud pipelines**.
-    It is custom-built to optimize day-to-day and data processing pipelines.
+    ### 🌐 Executive Overview
+    This centralized automation hub is architected under a high-performance **Offline-First Server Model** to eliminate slow, manual Excel operations and legacy macros. By replacing outdated data processes with high-speed **Python & Vectorized Pandas Pipelines**, the tool ensures 100% processing accuracy, robust data safety, and zero network-dependency bottlenecks.
 
     ---
 
-    ###  Key Modules & Features
+    ### 🛠️ Key Production Modules & Advanced Features
 
-    #### 1.  Data CleanUp Dashboard
-    - **Exact Portal Schema Mapping:** Columns are dynamically structured and ordered to match system ingestion layouts precisely.
-    - **Advanced Text Sanitization:** Automatically strips illegal non-printable characters, fixes punctuation, and applies proper Title Case to candidate and father names.
-    - **Address Deep-Cleaning:** Uses regular expressions (Regex) to purge junk strings like *"Aadhar Address:"*, *"Rent Agreement:"*, *"DL"*, and *":"* from applicant files.
-    - **Smart Regex PIN Extraction:** Isolates 6-digit postal codes instantly, even when compressed inside stuck text blocks (e.g., *Coimbatore641006*).
-    - **Automated Pincode VLOOKUP:** Performs an optimized memory merge against your Master Pincode file to auto-populate City names and Flow City IDs.
-    - **Smart Fallback Engine:** Automatically detects rows where both Pincode is missing and City is mapped as 'NA', over-writing them with the system fallback code **`8440`**.
+    #### 📈 1. I-Bridge Workload Allocator (Smart Queue Distribution)
+    - **Dynamic File Ingestion:** Auto-detects, reads, and cleans raw input streams seamlessly from both messy `.csv` and structured `.xlsx` workbooks.
+    - **Duplicate Clean-Up Layer:** Scans incoming queues in real time, flags repetitive references, and drops duplicates to ensure exactly **1 unique case per applicant**.
+    - **Compliance Series Filtering:** Instantly runs logical masks to block restricted case sequences (e.g., automatically filtering out the **`2304` series**).
+    - **SLA-First Smart Sorting:** Automatically parses operational ageing strings into numeric hour indicators and sorts the entire workforce queue in **Descending Order** (highest hours first) for SLA target protection.
+    - **Multi-Slot Balancing Engine:** Splits data packets dynamically into highly customized user-defined slices based on custom allocation counts.
+    - **Dual-Sheet Tracker Output:** Directly compiles and outputs automated multi-sheet `.xlsx` files using an optimized `openpyxl` engine layout.
 
-    #### 2. Image And Docs Converted Hub
-    - **Multi-File Batch Processing:** Upload multiple formats (`.png`, `.jpg`, `.jpeg`, `.docx`) concurrently.
-    - **Smart Auto-Orientation (EXIF Fix):** Automatically detects if an uploaded document scan is flipped upside down or sideways (e.g., rotated dimensions like 1166x1600) and auto-rotates it back to an upright portrait position.
-    - **Standardized A4 Resolution Scaling:** Resizes skewed image sizes to a clean, uniform A4 layout using advanced LANCZOS resampling to prevent text stretching.
-    - **Bulk Merge to One PDF:** Flattens and groups multiple images into a single multi-page compiled PDF report for a candidate.
-    - **One-Click Bulk ZIP Archiving:** Processes bulk standalone conversions in background memory and packs them into a single downloadable `.zip` file, saving manual click time.
-    - **Cloud-Friendly Word Docs to PDF Converter:** Uses a hybrid parsing engine (`python-docx` & `ReportLab`) to dynamically read Word files and render them as high-quality PDFs on the fly without needing external system tools.
+    #### 🧹 2. BGC Data CleanUp Dashboard
+    - **Exact Portal Schema Mapping:** Columns are dynamically structured, re-ordered, and aligned to match production target layouts precisely.
+    - **Advanced Text Sanitization:** Automatically strips illegal non-printable characters, resolves system-breaking punctuation, and applies proper Title Case.
+    - **Address Deep-Cleaning Engine:** Utilizes optimized Regular Expressions (Regex) to purge clutter and junk tracking phrases from raw applicant data strings.
+    - **Smart Regex PIN Extraction:** Isolate 6-digit postal pin codes instantly, even when compressed deep inside fused or unformatted text blocks.
+    - **Automated Database Mapping:** Performs a high-speed memory merge against Master Databases to auto-populate exact City names and District System IDs.
+    - **Conditional Fallback Logic:** Programmatically scans for rows where both Pincode and City data are unavailable, overwriting them with the system fallback code **`8440`** to guarantee 100% system ingestion success.
 
-    #### 3. Future Pipeline Modules
-    - **MSG Conversion & ARS Check Updation:** Dedicated pipelines currently reserved as placeholders for downstream integration of communication logs and automated portal verification mappings.
+    #### 📄 3. Document & Image to PDF Converter Hub
+    - **Multi-File Batch Processing:** Concurrently handles parallel uploads of multiple text and image formats (`.png`, `.jpg`, `.jpeg`, `.docx`).
+    - **🔄 Smart Auto-Orientation (EXIF Fix):** Automatically detects if a scanned document or ID card is flipped or rotated and shifts it back to an upright portrait profile.
+    - **📐 Standardized A4 Scaling:** Resizes and realigns skewed images into uniform A4 sheet boundaries using advanced LANCZOS resampling to protect text clarity.
+    - **📦 One-Click Bulk ZIP Archiving:** Assembles multiple standalone file transforms directly inside memory buffers and compresses them into a single downloadable package.
+    - **☁️ Cloud-Friendly Word to PDF Engine:** Uses a native hybrid parsing layer (`python-docx` & `ReportLab`) to render documents directly on the local machine without external software installations.
+
+    ---
+
+    ### 🛡️ Secure Core Infrastructure Strategy
+    To ensure complete alignment with data safety standards, this application executes entirely within the local machine's volatile memory (RAM) and local CPU. This **Client-Side execution design** guarantees zero data exposure, ensures strict compliance with corporate Data Loss Prevention (DLP) frameworks, and allows smooth execution without external cloud endpoints.
     """)
     
