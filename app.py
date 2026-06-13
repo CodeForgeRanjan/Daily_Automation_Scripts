@@ -11,26 +11,17 @@ def play_celebration_confetti():
         """
         <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
         <script>
-            // Blast 1: Left Side Se
-            confetti({
-                particleCount: 150,
-                spread: 80,
-                origin: { x: 0, y: 0.6 }
-            });
-            // Blast 2: Right Side Se
-            confetti({
-                particleCount: 150,
-                spread: 80,
-                origin: { x: 1, y: 0.6 }
-            });
-            // Blast 3: Center Se Thoda Oopar
-            setTimeout(() => {
-                confetti({
-                    particleCount: 200,
-                    spread: 100,
-                    origin: { y: 0.4 }
-                });
-            }, 300);
+            function launch() {
+                // Blast 1: Left Side Se
+                confetti({ particleCount: 150, spread: 80, origin: { x: 0, y: 0.6 } });
+                // Blast 2: Right Side Se
+                confetti({ particleCount: 150, spread: 80, origin: { x: 1, y: 0.6 } });
+                // Blast 3: Center Se Thoda Oopar
+                setTimeout(() => {
+                    confetti({ particleCount: 200, spread: 100, origin: { y: 0.4 } });
+                }, 300);
+            }
+            setTimeout(launch, 100);
         </script>
         """,
         height=0, # Isse background mein silently chalega, screen par koi khali box nahi dikhega
@@ -323,8 +314,12 @@ if page == "Data Upload":
 
                 final = final.map(remove_illegal_chars)
 
+            # --- REFRESH-PROOF CELEBRATION TRIGGER ---
+            if 'cleanup_done' not in st.session_state:
+                st.session_state.cleanup_done = True
+                play_celebration_confetti()
+
             st.success("Process Completed Successfully! All Data Compiled.")
-            play_celebration_confetti() # Patakha Blast 💥
 
             m_col1, m_col2, m_col3, m_col4 = st.columns(4)
             with m_col1:
@@ -351,13 +346,17 @@ if page == "Data Upload":
                 mime="text/csv"
             )
 
+            # Dynamic reset logic to fire again on next upload loop
+            if 'cleanup_done' in st.session_state:
+                del st.session_state.cleanup_done
+
         except Exception as e:
             st.error(f"error encountered during setup: {e}")
             
     elif my_file is not None and master_file is None:
         st.info(" Please upload the Master file to process automatic City & City ID mapping.")
         st.success("Process Completed Successfully! All Data Compiled.")
-        play_celebration_confetti() # Single File Upload Context Blast 💥
+        play_celebration_confetti()
 
 elif page == "Image And Docs Converted":
     st.markdown('<p class="main-title">Document & Image to PDF Converter Hub</p>', unsafe_allow_html=True)
@@ -417,7 +416,7 @@ elif page == "Image And Docs Converted":
                                     zip_file.writestr(clean_name, pdf_buffer.getvalue())
                                     
                             st.success("All Images Converted successfully!")
-                            play_celebration_confetti() # ZIP Production Blast 💥
+                            play_celebration_confetti() 
                             
                             st.download_button(
                                 label="Download All PDFs in One Click (ZIP)",
@@ -453,7 +452,7 @@ elif page == "Image And Docs Converted":
                             pdf_data = pdf_buffer.getvalue()
                             
                             st.success("Multi-page PDF Compiled!")
-                            play_celebration_confetti() # Report Generation Blast 💥
+                            play_celebration_confetti() 
                             
                             st.download_button(
                                 label="Download Compiled PDF",
@@ -593,7 +592,7 @@ elif page == "Image And Docs Converted":
                         doc_template.build(story)
                         
                         st.success("Document converted with universal layout styling!")
-                        play_celebration_confetti() # Single DOCX transform blast 💥
+                        play_celebration_confetti() 
                         
                         st.download_button(
                             label="Download Converted PDF",
@@ -622,7 +621,7 @@ elif page == "Image And Docs Converted":
                                     zip_file.writestr(clean_name, pdf_buffer.getvalue())
                                     
                             st.success("Bulk documents universally packed into ZIP!")
-                            play_celebration_confetti() # Dynamic Bulk Word Zip Blast 💥
+                            play_celebration_confetti() 
                             
                             st.download_button(
                                 label="Download Processed PDF Package (ZIP)",
@@ -823,7 +822,7 @@ elif page == "MSG Conversion":
                                 zip_file.writestr(clean_pdf_name, word_pdf_buffer.getvalue())
 
                     st.success("Full Package Compiled! Email body and all document templates packed securely.")
-                    play_celebration_confetti() # MSG Unpack Bundle Success Blast 💥
+                    play_celebration_confetti() 
                     
                     st.download_button(
                         label="Download Complete Converted PDF Package (ZIP)",
@@ -958,7 +957,7 @@ elif page == "Bridge Allocation":
                             final_tracker_df = pd.DataFrame(tracker_rows)
                             
                             st.success(f"Process Completed! Distributed {total_requested_allocation} cases among {len(user_allocations)} team members.")
-                            play_celebration_confetti() # Bridge Allocation Algorithm Success Blast 💥
+                            play_celebration_confetti() 
 
                             st.markdown('<p class="section-header">Live Allocation Summary Record</p>', unsafe_allow_html=True)
                             st.dataframe(final_tracker_df, use_container_width=True)
