@@ -797,7 +797,7 @@ elif page == "MSG Conversion":
 
             # Display Attachment Metrics UI Grid
             if valid_attachments:
-                st.info(f"🔍 Found total {len(valid_attachments)} actionable document attachment(s) inside this email context.")
+                st.info(f"Found total {len(valid_attachments)} actionable document attachment(s) inside this email context.")
                 att_df = pd.DataFrame(valid_attachments)[["name", "type"]]
                 att_df.columns = ["File Name", "Document Type"]
                 st.dataframe(att_df, use_container_width=True)
@@ -897,7 +897,7 @@ elif page == "ARS Check Updation":
 elif page == "I bridge Allocation":
         import openpyxl
         
-        st.markdown('<p class="main-title">⚡ Intelligent I-Bridge Workload Allocator</p>', unsafe_allow_html=True)
+        st.markdown('<p class="main-title">I-Bridge Workload Allocator</p>', unsafe_allow_html=True)
         st.write("Upload your raw data file to instantly clean duplicates, filter restricted series, and generate a dual-sheet allocation tracker.")
 
         # File Uploader supporting both CSV and Excel format
@@ -909,11 +909,11 @@ elif page == "I bridge Allocation":
                     # --- 1. DYNAMIC AUTO-DETECTING FILE LOADING LAYER ---
                     if uploaded_alloc_file.name.endswith('.csv'):
                         try:
-                            # sep=None aur engine='python' automatic delimiter pehchan leta hai
+                            
                             df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", sep=None, engine='python', on_bad_lines='skip')
                         except Exception:
                             uploaded_alloc_file.seek(0)
-                            # Backup agar top par metadata headers ho
+                            # Backup engine metadata headers 
                             df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", skiprows=4, sep=None, engine='python', on_bad_lines='skip')
                     else:
                         df_alloc = pd.read_excel(uploaded_alloc_file)
@@ -921,59 +921,58 @@ elif page == "I bridge Allocation":
                     # Clean column names for case sensitivity issues
                     df_alloc.columns = df_alloc.columns.str.strip()
                     
-                    # Tab Fallback verification (Grafana specific)
+                    # Tab Fallback verification 
                     if len(df_alloc.columns) <= 1:
                         uploaded_alloc_file.seek(0)
                         df_alloc = pd.read_csv(uploaded_alloc_file, encoding="latin1", sep='\t', on_bad_lines='skip')
                         df_alloc.columns = df_alloc.columns.str.strip()
 
                     # --- 2. SAFE COLUMN IDENTIFICATION (FIX FOR INDEX OUT OF BOUNDS) ---
-                    # Strict text search taaki index array range se bahar na jaye
                     ars_candidates = [col for col in df_alloc.columns if 'ars' in col.lower() or 'ars no' in col.lower()]
                     ageing_candidates = [col for col in df_alloc.columns if 'ageing' in col.lower() or 'hour' in col.lower()]
                     
                     if ars_candidates:
                         ars_col = ars_candidates[0]
                     else:
-                        st.error("❌ File mein 'ARS No' column nahi mila! Please check columns: " + str(df_alloc.columns.tolist()))
+                        st.error("File 'ARS No'! Please check columns: " + str(df_alloc.columns.tolist()))
                         st.stop()
                         
                     if ageing_candidates:
                         ageing_col = ageing_candidates[0]
                     else:
-                        st.error("❌ File mein 'Ageing_Hour' column nahi mila! Please check columns: " + str(df_alloc.columns.tolist()))
+                        st.error("File 'Ageing_Hour'! Please check columns: " + str(df_alloc.columns.tolist()))
                         st.stop()
                     # --------------------------------------------------------------------
                     
-                    # 3. REMOVE DUPLICATED ARS NUMBERS (Strict rule: pick only 1 out of multiple repeats)
+                    #REMOVE DUPLICATED ARS NUMBERS (Strict rule: pick only 1 out of multiple repeats)
                     initial_count = len(df_alloc)
                     df_alloc = df_alloc.dropna(subset=[ars_col])
                     df_alloc = df_alloc.drop_duplicates(subset=[ars_col])
                     dedup_count = initial_count - len(df_alloc)
                     
-                    # 4. HARD FILTER: Exclude ARS numbers starting with '2304'
+                    #Exclude ARS numbers starting with '2304'
                     df_alloc[ars_col] = df_alloc[ars_col].astype(str).str.strip()
                     df_filtered = df_alloc[~df_alloc[ars_col].str.startswith('2304')].copy()
                     excluded_2304_count = len(df_alloc) - len(df_filtered)
                     
-                    # 5. SORT BY AGEING HOUR (Highest ageing hours first for SLA safety)
+                    #SORT BY AGEING HOUR (Highest ageing hours first for SLA safety)
                     df_filtered[ageing_col] = pd.to_numeric(df_filtered[ageing_col], errors='coerce').fillna(0)
                     df_filtered = df_filtered.sort_values(by=ageing_col, ascending=False).reset_index(drop=True)
                         
                     total_available_rows = len(df_filtered)
 
                 # Show Live Queue Analytics Cards
-                st.markdown('<p class="section-header">📊 Cleaned Queue Analytics</p>', unsafe_allow_html=True)
+                st.markdown('<p class="section-header">Cleaned Queue Analytics</p>', unsafe_allow_html=True)
                 stat_col1, stat_col2, stat_col3 = st.columns(3)
                 with stat_col1:
                     st.metric(label="Total Cases Available for Allocation", value=f"{total_available_rows} rows")
                 with stat_col2:
-                    st.metric(label="Duplicate Repeats Cleaned 🚫", value=f"{dedup_count} items")
+                    st.metric(label="Duplicate Repeats Cleaned", value=f"{dedup_count} items")
                 with stat_col3:
-                    st.metric(label="2304 Series Blocked 🛡️", value=f"{excluded_2304_count} rows")
+                    st.metric(label="2304 Series Blocked", value=f"{excluded_2304_count} rows")
 
                 st.markdown("---")
-                st.markdown('<p class="section-header">👥 Team Workload Allocation Settings (5 Slots)</p>', unsafe_allow_html=True)
+                st.markdown('<p class="section-header">👥 Team Workload Allocation(5 Slots)</p>', unsafe_allow_html=True)
                 st.info("Enter the User Names and the number of cases you want to allocate to each slot.")
 
                 # Input Slots configuration
@@ -991,14 +990,14 @@ elif page == "I bridge Allocation":
                 st.markdown("---")
 
                 # TRIGGER ALLOCATION PROCESSING PIPELINE
-                if st.button("⚡ Process Workload Allocation & Compile XLSX", use_container_width=True):
+                if st.button("Process Workload Allocation & Compile XLSX", use_container_width=True):
                     if not user_allocations:
-                        st.warning("⚠️ Please fill at least one User Name and a valid case count greater than 0 to allocate data!")
+                        st.warning("Please fill at least one User Name and a valid case count greater than 0 to allocate data!")
                     else:
                         total_requested_allocation = sum(item['count'] for item in user_allocations)
                         
                         if total_requested_allocation > total_available_rows:
-                            st.error(f"❌ Allocation Limit Exceeded! You requested total {total_requested_allocation} cases, but only {total_available_rows} cases are available.")
+                            st.error(f"Allocation Limit Exceeded! You requested total {total_requested_allocation} cases, but only {total_available_rows} cases are available.")
                         else:
                             with st.spinner("Slicing data queues and generating dual-sheet tracker framework..."):
                                 current_pointer = 0
@@ -1013,7 +1012,7 @@ elif page == "I bridge Allocation":
                                     # Extract the exact slice block for this user
                                     sub_df = df_filtered.iloc[current_pointer : current_pointer + count].copy()
                                     
-                                    # Create a clean DataFrame with ONLY Allocated User Name and ARS No (Kachra Saaf)
+                                    # Create a clean DataFrame with ONLY Allocated User Name and ARS No
                                     clean_sub_df = pd.DataFrame()
                                     clean_sub_df['Allocated User Name'] = [name] * len(sub_df)
                                     clean_sub_df['ARS No'] = sub_df[ars_col].values
@@ -1035,14 +1034,14 @@ elif page == "I bridge Allocation":
                                 # Create Summary Tracking DataFrame
                                 final_tracker_df = pd.DataFrame(tracker_rows)
                                 
-                                st.success(f"🎉 Process Completed! Distributed {total_requested_allocation} cases among {len(user_allocations)} team members.")
+                                st.success(f"Process Completed! Distributed {total_requested_allocation} cases among {len(user_allocations)} team members.")
                                 
-                                # UI Summary Record Display (Taaki baar baar filter na karna pade)
-                                st.markdown('<p class="section-header">📈 Live Allocation Summary Record</p>', unsafe_allow_html=True)
+                                # UI Summary Record Display
+                                st.markdown('<p class="section-header">Live Allocation Summary Record</p>', unsafe_allow_html=True)
                                 st.dataframe(final_tracker_df, use_container_width=True)
                                 
                                 # Show preview of assigned breakdown configurations
-                                st.markdown('<p class="section-header">🔍 Data Output Preview (Top 5 Rows)</p>', unsafe_allow_html=True)
+                                st.markdown('<p class="section-header">Data Output Preview (Top 5 Rows)</p>', unsafe_allow_html=True)
                                 st.dataframe(final_allocation_df.head(5), use_container_width=True)
                                 
                                 # Create an in-memory excel stream with DUAL SHEETS using openpyxl
@@ -1057,9 +1056,9 @@ elif page == "I bridge Allocation":
                                 
                                 # Download button for compiled sheet
                                 st.download_button(
-                                    label="📥 Download Allocated XLSX File (Dual Sheets Loaded)",
+                                    label="Download Allocated XLSX File (Dual Sheets Loaded)",
                                     data=excel_output,
-                                    file_name="I_Bridge_Workload_Allocation.xlsx",
+                                    file_name="I_Bridge_Allocation.xlsx",
                                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                                     use_container_width=True
                                 )
@@ -1072,14 +1071,14 @@ elif page == "About Tool":
     
     st.markdown("""
     ###  Overview
-    This central automation hub replaces slow, manual Excel workflows and legacy VBA macros with high-speed, secure **Python Streamlit & Pandas cloud pipelines**.
-    It is custom-built to optimize day-to-day background verification (BGV) and data processing pipelines.
+    This central automation hub replaces slow, manual Excel workflows and legacy VBA macros with high-speed, secure **Python & Pandas cloud pipelines**.
+    It is custom-built to optimize day-to-day and data processing pipelines.
 
     ---
 
     ###  Key Modules & Features
 
-    #### 1.  Uber Data CleanUp Dashboard
+    #### 1.  Data CleanUp Dashboard
     - **Exact Portal Schema Mapping:** Columns are dynamically structured and ordered to match system ingestion layouts precisely.
     - **Advanced Text Sanitization:** Automatically strips illegal non-printable characters, fixes punctuation, and applies proper Title Case to candidate and father names.
     - **Address Deep-Cleaning:** Uses regular expressions (Regex) to purge junk strings like *"Aadhar Address:"*, *"Rent Agreement:"*, *"DL"*, and *":"* from applicant files.
