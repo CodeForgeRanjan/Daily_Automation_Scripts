@@ -388,8 +388,6 @@ if page == "Data Upload":
         st.success("Process Completed Successfully! All Data Compiled.")
 play_celebration_confetti() # <-- Ekdum perfect seedh mein!
 
-
-
 #  IMAGE & DOCS CONVERTED (ZIP + AUTO-ROTATE ENABLED) 
 elif page == "Image And Docs Converted":
     import zipfile  
