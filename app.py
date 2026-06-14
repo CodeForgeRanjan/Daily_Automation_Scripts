@@ -6,22 +6,19 @@ from PIL import Image
 from rapidfuzz import process, utils # Fast Fuzzy matching
 
 # Page Setup & Styling
-st.set_page_config(page_title="Multi-Utility Automation Tool", page_icon="🤖🦾", layout="wide")
+st.set_page_config(page_title="Multi-Utility Automation Tool", page_icon="🤖", layout="wide")
 
-# Custom CSS for Professional UI Design 
+# Custom CSS 
 st.markdown("""
     <style>
-    /* Pure App Ka Background Background Change Karne Ke Liye */
     .stApp {
-        background-image: linear-gradient(to top, rgba(17, 24, 39, 0.85), rgba(17, 24, 39, 0.95)), 
+        background-image: linear-gradient(to top, rgba(19, 24, 39, 0.85), rgba(19, 24, 39, 0.95)), 
                           url("https://images.unsplash.com/photo-1639322537228-f710d846310a?auto=format&fit=crop&w=1600&q=80");
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
         background-attachment: fixed;
     }
-    
-    /* Input boxes aur blocks ko readable banane ke liye unka card background translucent karna */
     div[data-testid="stFileUploader"], div[data-testid="stMetric"], .stTabs, div.stForm {
         background-color: rgba(255, 255, 255, 0.05) !important;
         padding: 15px;
