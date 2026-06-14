@@ -29,7 +29,7 @@ st.markdown("""
     .main-title {
         font-size: 40px;
         font-weight: bold;
-        color: #F9D423;
+        color: #eeeeee;
         text-align: center;
         padding: 10px;
         background: linear-gradient(90deg, #F9D423 0%, #FF4E50 100%);
