@@ -49,7 +49,7 @@ st.markdown("""
     .section-header{
         font-size: 20px;
         font-weight: 600;
-        color: #F9D423;
+        color: #003366;
         margin-top: 15px;
         margin-bottom: 10px;
     }
