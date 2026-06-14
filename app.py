@@ -29,7 +29,7 @@ st.markdown("""
     .main-title {
         font-size: 40px;
         font-weight: bold;
-        color: #111111;
+        color: #F9D423;
         text-align: center;
         padding: 10px;
         background: linear-gradient(90deg, #F9D423 0%, #FF4E50 100%);
@@ -42,7 +42,7 @@ st.markdown("""
     .sidebar-heading {
         font-size: 24px;
         font-weight: bold;
-        color: #00ffff;
+        color: #468499;
         margin-bottom: 20px;
         text-shadow: 0px 0px 10px rgba(0,255,255,0.5);
     }
