@@ -380,7 +380,6 @@ if page == "Data Upload":
             
     elif my_file is not None and master_file is None:
         st.info(" Please upload the Master file to process automatic City & City ID mapping.")
-        st.success("Process Completed Successfully! All Data Compiled.")
 
 #  IMAGE & DOCS CONVERTED (ZIP + AUTO-ROTATE ENABLED) 
 elif page == "Image And Docs Converted":
