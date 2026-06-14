@@ -6,24 +6,20 @@ from PIL import Image
 from rapidfuzz import process, utils # Fast Fuzzy matching
 
 def play_celebration_confetti():
-    """Poori screen par patakhe phodne ke liye custom JavaScript inject engine"""
     st.components.v1.html(
         """
-        <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js/confetti.browser.min.js"></script>
         <script>
-            // Blast 1: Left Side Se
             confetti({
                 particleCount: 150,
                 spread: 80,
                 origin: { x: 0, y: 0.6 }
             });
-            // Blast 2: Right Side Se
             confetti({
                 particleCount: 150,
                 spread: 80,
                 origin: { x: 1, y: 0.6 }
             });
-            // Blast 3: Center Se Thoda Oopar
             setTimeout(() => {
                 confetti({
                     particleCount: 200,
@@ -33,11 +29,11 @@ def play_celebration_confetti():
             }, 300);
         </script>
         """,
-        height=0, # Isse background mein silently chalega, screen par koi khali box nahi dikhega
+        height=0, 
     )
 
 # Page Setup & Styling
-st.set_page_config(page_title="Multi-Utility Automation Tool", page_icon="🚗", layout="wide")
+st.set_page_config(page_title="Multi-Utility Automation Tool", page_icon="🤖🦾", layout="wide")
 
 # Custom CSS for Professional UI Design
 st.markdown("""
@@ -195,13 +191,12 @@ def find_closest_city_id(detected_district, master_unique_df):
 # SIDEBAR NAVIGATION 
 st.sidebar.markdown('<p class="sidebar-heading">Navigation Menu</p>', unsafe_allow_html=True)
 
-# Aapka purana radio button menu
 page = st.sidebar.radio(
     "Go to:", 
     ["Data Upload", "Image And Docs Converted", "MSG Conversion", "ARS Check Updation", "Bridge Allocation", "About Tool"]
 )
 
-# NEW PREMIUM VERSION FOOTER IN SIDEBAR ---
+# PREMIUM VERSION FOOTER IN SIDEBAR
 st.sidebar.markdown("---") 
 
 st.sidebar.caption("🤖 **System Status:** Connected")
@@ -211,7 +206,7 @@ st.sidebar.caption("🛡️ **Mode:** Local-First Secure")
 
 st.sidebar.markdown(
     '<p style="color: #888888; font-size: 18px; text-align: center; margin-top: 70px;">'
-    '© 2026 CodeForgeRanjan</p>', 
+    '© ❤️ 2026 CodeForgeRanjan</p>', 
     unsafe_allow_html=True
 )
 
@@ -386,7 +381,6 @@ if page == "Data Upload":
     elif my_file is not None and master_file is None:
         st.info(" Please upload the Master file to process automatic City & City ID mapping.")
         st.success("Process Completed Successfully! All Data Compiled.")
-play_celebration_confetti() # <-- Ekdum perfect seedh mein!
 
 #  IMAGE & DOCS CONVERTED (ZIP + AUTO-ROTATE ENABLED) 
 elif page == "Image And Docs Converted":
