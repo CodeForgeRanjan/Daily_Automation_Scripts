@@ -5,39 +5,30 @@ import io
 from PIL import Image
 from rapidfuzz import process, utils # Fast Fuzzy matching
 
-def play_celebration_confetti():
-    st.components.v1.html(
-        """
-        <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js/confetti.browser.min.js"></script>
-        <script>
-            confetti({
-                particleCount: 150,
-                spread: 80,
-                origin: { x: 0, y: 0.6 }
-            });
-            confetti({
-                particleCount: 150,
-                spread: 80,
-                origin: { x: 1, y: 0.6 }
-            });
-            setTimeout(() => {
-                confetti({
-                    particleCount: 200,
-                    spread: 100,
-                    origin: { y: 0.4 }
-                });
-            }, 300);
-        </script>
-        """,
-        height=0, 
-    )
-
 # Page Setup & Styling
 st.set_page_config(page_title="Multi-Utility Automation Tool", page_icon="🤖🦾", layout="wide")
 
-# Custom CSS for Professional UI Design
+# Custom CSS for Professional UI Design 
 st.markdown("""
     <style>
+    /* Pure App Ka Background Background Change Karne Ke Liye */
+    .stApp {
+        background-image: linear-gradient(to top, rgba(17, 24, 39, 0.85), rgba(17, 24, 39, 0.95)), 
+                          url("https://images.unsplash.com/photo-1639322537228-f710d846310a?auto=format&fit=crop&w=1600&q=80");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+    
+    /* Input boxes aur blocks ko readable banane ke liye unka card background translucent karna */
+    div[data-testid="stFileUploader"], div[data-testid="stMetric"], .stTabs, div.stForm {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
     .main-title {
         font-size: 40px;
         font-weight: bold;
