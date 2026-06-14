@@ -42,14 +42,15 @@ st.markdown("""
     .sidebar-heading {
         font-size: 24px;
         font-weight: bold;
-        color: #468499;
+        color: #f3e0bb;
         margin-bottom: 20px;
         text-shadow: 0px 0px 10px rgba(0,255,255,0.5);
+        gap:1.5rem;
     }
     .section-header{
         font-size: 20px;
         font-weight: 600;
-        color: #003366;
+        color: #f78b8b;
         margin-top: 15px;
         margin-bottom: 10px;
     }
