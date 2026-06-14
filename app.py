@@ -12,7 +12,7 @@ st.set_page_config(page_title="Multi-Utility Automation Tool", page_icon="🤖",
 st.markdown("""
     <style>
     .stApp {
-        background-image: linear-gradient(to top, rgba(19, 24, 39, 0.85), rgba(19, 24, 39, 0.95)), 
+        background-image: linear-gradient(to top, rgba(17, 24, 39, 0.85), rgba(17, 24, 39, 0.95)), 
                           url("https://images.unsplash.com/photo-1639322537228-f710d846310a?auto=format&fit=crop&w=1600&q=80");
         background-size: cover;
         background-position: center;
