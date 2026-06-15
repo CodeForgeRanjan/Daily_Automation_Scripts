@@ -184,7 +184,7 @@ st.sidebar.markdown('<p class="sidebar-heading">Navigation Menu</p>', unsafe_all
 
 page = st.sidebar.radio(
     "Go to:", 
-    ["Data Upload", "Image And Docs Converted", "MSG Conversion", "ARS Check Updation", "Bridge Allocation", "About Tool"]
+    ["Data Upload", "Image And Docs Converted", "MSG Conversion", "ARS Check Updation", "Bridge Allocation"]
 )
 
 # PREMIUM VERSION FOOTER IN SIDEBAR
@@ -196,7 +196,7 @@ st.sidebar.caption("🛡️ **Mode:** Local-First Secure")
 
 
 st.sidebar.markdown(
-    '<p style="color: #888888; font-size: 18px; text-align: center; margin-top: 70px;">'
+    '<p style="color: #998c00; font-size: 18px; text-align: center; margin-top: 70px;">'
     '© ❤️ 2026 CodeForgeRanjan</p>', 
     unsafe_allow_html=True
 )
@@ -917,7 +917,7 @@ elif page == "MSG Conversion":
                         st.error(f"Bundle Generation Error: {e}")
 elif page == "ARS Check Updation":
     st.markdown('<p class="main-title"> ARS Check Updation</p>', unsafe_allow_html=True)
-    st.info("Work in progress... This route is a placeholder for the background verification portal automation.")
+    st.info("Work in progress...")
 
 # BRIDGE ALLOCATION SUITE 
 elif page == "Bridge Allocation":
@@ -959,7 +959,7 @@ elif page == "Bridge Allocation":
                     if ars_candidates:
                         ars_col = ars_candidates[0]
                     else:
-                        st.error("File 'ARS No'! Please check columns: " + str(df_alloc.columns.tolist()))
+                        st.error("File 'Not Found ARS No'! Please check columns: " + str(df_alloc.columns.tolist()))
                         st.stop()
                         
                     if ageing_candidates:
@@ -1036,17 +1036,16 @@ elif page == "Bridge Allocation":
                                     # Extract the exact slice block for this user
                                     sub_df = df_filtered.iloc[current_pointer : current_pointer + count].copy()
                                     
-                                    # Create a clean DataFrame with ONLY Allocated User Name and No
                                     clean_sub_df = pd.DataFrame()
-                                    clean_sub_df['Allocated User Name'] = [name] * len(sub_df)
+                                    clean_sub_df['User Name'] = [name] * len(sub_df)
                                     clean_sub_df['ARS No'] = sub_df[ars_col].values
                                     
                                     allocated_chunks.append(clean_sub_df)
                                     
                                     # Tracking Summary row block append
                                     tracker_rows.append({
-                                        "Allocated User Name": name,
-                                        "Allocated Case Count": count
+                                        "User Name": name,
+                                        "Case Count": count
                                     })
                                     
                                     # Move pointer forward
@@ -1087,46 +1086,46 @@ elif page == "Bridge Allocation":
                                     use_container_width=True
                                 )
 
-            except Exception as e:
-                st.error(f"Allocation Engine Failed: {e}")
+#             except Exception as e:
+#                 st.error(f"Allocation Engine Failed: {e}")
                 
-elif page == "About Tool":
-    st.markdown('<p class="main-title">⚙️ About Automation Utility Tool</p>', unsafe_allow_html=True)
+# elif page == "About Tool":
+#     st.markdown('<p class="main-title">⚙️ About Automation Utility Tool</p>', unsafe_allow_html=True)
     
-    st.markdown("""
-    ### 🌐 Executive Overview
-    This centralized automation hub is architected under a high-performance **Offline-First Server Model** to eliminate slow, manual Excel operations and legacy macros. By replacing outdated data processes with high-speed **Python & Vectorized Pandas Pipelines**, the tool ensures 100% processing accuracy, robust data safety, and zero network-dependency bottlenecks.
+#     st.markdown("""
+#     ### 🌐 Executive Overview
+#     This centralized automation hub is architected under a high-performance **Offline-First Server Model** to eliminate slow, manual Excel operations and legacy macros. By replacing outdated data processes with high-speed **Python & Vectorized Pandas Pipelines**, the tool ensures 100% processing accuracy, robust data safety, and zero network-dependency bottlenecks.
 
-    ---
+#     ---
 
-    ### 🛠️ Key Production Modules & Advanced Features
+#     ### 🛠️ Key Production Modules & Advanced Features
 
-    #### 📈 1. Bridge Workload Allocator (Smart Queue Distribution)
-    - **Dynamic File Ingestion:** Auto-detects, reads, and cleans raw input streams seamlessly from both messy `.csv` and structured `.xlsx` workbooks.
-    - **Duplicate Clean-Up Layer:** Scans incoming queues in real time, flags repetitive references, and drops duplicates to ensure exactly **1 unique case per applicant**.
-    - **Compliance Series Filtering:** Instantly runs logical masks to block restricted case sequences (e.g., automatically filtering out the **`2304` series**).
-    - **SLA-First Smart Sorting:** Automatically parses operational ageing strings into numeric hour indicators and sorts the entire workforce queue in **Descending Order** (highest hours first) for SLA target protection.
-    - **Multi-Slot Balancing Engine:** Splits data packets dynamically into highly customized user-defined slices based on custom allocation counts.
-    - **Dual-Sheet Tracker Output:** Directly compiles and outputs automated multi-sheet `.xlsx` files using an optimized `openpyxl` engine layout.
+#     #### 📈 1. Bridge Workload Allocator (Smart Queue Distribution)
+#     - **Dynamic File Ingestion:** Auto-detects, reads, and cleans raw input streams seamlessly from both messy `.csv` and structured `.xlsx` workbooks.
+#     - **Duplicate Clean-Up Layer:** Scans incoming queues in real time, flags repetitive references, and drops duplicates to ensure exactly **1 unique case per applicant**.
+#     - **Compliance Series Filtering:** Instantly runs logical masks to block restricted case sequences (e.g., automatically filtering out the **`2304` series**).
+#     - **SLA-First Smart Sorting:** Automatically parses operational ageing strings into numeric hour indicators and sorts the entire workforce queue in **Descending Order** (highest hours first) for SLA target protection.
+#     - **Multi-Slot Balancing Engine:** Splits data packets dynamically into highly customized user-defined slices based on custom allocation counts.
+#     - **Dual-Sheet Tracker Output:** Directly compiles and outputs automated multi-sheet `.xlsx` files using an optimized `openpyxl` engine layout.
 
-    #### 🧹 2. BGC Data CleanUp Dashboard
-    - **Exact Portal Schema Mapping:** Columns are dynamically structured, re-ordered, and aligned to match production target layouts precisely.
-    - **Advanced Text Sanitization:** Automatically strips illegal non-printable characters, resolves system-breaking punctuation, and applies proper Title Case.
-    - **Address Deep-Cleaning Engine:** Utilizes optimized Regular Expressions (Regex) to purge clutter and junk tracking phrases from raw applicant data strings.
-    - **Smart Regex PIN Extraction:** Isolate 6-digit postal pin codes instantly, even when compressed deep inside fused or unformatted text blocks.
-    - **Automated Database Mapping:** Performs a high-speed memory merge against Master Databases to auto-populate exact City names and District System IDs.
-    - **Conditional Fallback Logic:** Programmatically scans for rows where both Pincode and City data are unavailable, overwriting them with the system fallback code **`8440`** to guarantee 100% system ingestion success.
+#     #### 🧹 2. BGC Data CleanUp Dashboard
+#     - **Exact Portal Schema Mapping:** Columns are dynamically structured, re-ordered, and aligned to match production target layouts precisely.
+#     - **Advanced Text Sanitization:** Automatically strips illegal non-printable characters, resolves system-breaking punctuation, and applies proper Title Case.
+#     - **Address Deep-Cleaning Engine:** Utilizes optimized Regular Expressions (Regex) to purge clutter and junk tracking phrases from raw applicant data strings.
+#     - **Smart Regex PIN Extraction:** Isolate 6-digit postal pin codes instantly, even when compressed deep inside fused or unformatted text blocks.
+#     - **Automated Database Mapping:** Performs a high-speed memory merge against Master Databases to auto-populate exact City names and District System IDs.
+#     - **Conditional Fallback Logic:** Programmatically scans for rows where both Pincode and City data are unavailable, overwriting them with the system fallback code **`8440`** to guarantee 100% system ingestion success.
 
-    #### 📄 3. Document & Image to PDF Converter Hub
-    - **Multi-File Batch Processing:** Concurrently handles parallel uploads of multiple text and image formats (`.png`, `.jpg`, `.jpeg`, `.docx`).
-    - **🔄 Smart Auto-Orientation (EXIF Fix):** Automatically detects if a scanned document or ID card is flipped or rotated and shifts it back to an upright portrait profile.
-    - **📐 Standardized A4 Scaling:** Resizes and realigns skewed images into uniform A4 sheet boundaries using advanced LANCZOS resampling to protect text clarity.
-    - **📦 One-Click Bulk ZIP Archiving:** Assembles multiple standalone file transforms directly inside memory buffers and compresses them into a single downloadable package.
-    - **☁️ Cloud-Friendly Word to PDF Engine:** Uses a native hybrid parsing layer (`python-docx` & `ReportLab`) to render documents directly on the local machine without external software installations.
+#     #### 📄 3. Document & Image to PDF Converter Hub
+#     - **Multi-File Batch Processing:** Concurrently handles parallel uploads of multiple text and image formats (`.png`, `.jpg`, `.jpeg`, `.docx`).
+#     - **🔄 Smart Auto-Orientation (EXIF Fix):** Automatically detects if a scanned document or ID card is flipped or rotated and shifts it back to an upright portrait profile.
+#     - **📐 Standardized A4 Scaling:** Resizes and realigns skewed images into uniform A4 sheet boundaries using advanced LANCZOS resampling to protect text clarity.
+#     - **📦 One-Click Bulk ZIP Archiving:** Assembles multiple standalone file transforms directly inside memory buffers and compresses them into a single downloadable package.
+#     - **☁️ Cloud-Friendly Word to PDF Engine:** Uses a native hybrid parsing layer (`python-docx` & `ReportLab`) to render documents directly on the local machine without external software installations.
 
-    ---
+#     ---
 
-    ### 🛡️ Secure Core Infrastructure Strategy
-    To ensure complete alignment with data safety standards, this application executes entirely within the local machine's volatile memory (RAM) and local CPU. This **Client-Side execution design** guarantees zero data exposure, ensures strict compliance with corporate Data Loss Prevention (DLP) frameworks, and allows smooth execution without external cloud endpoints.
-    """)
+#     ### 🛡️ Secure Core Infrastructure Strategy
+#     To ensure complete alignment with data safety standards, this application executes entirely within the local machine's volatile memory (RAM) and local CPU. This **Client-Side execution design** guarantees zero data exposure, ensures strict compliance with corporate Data Loss Prevention (DLP) frameworks, and allows smooth execution without external cloud endpoints.
+#     """)
     
