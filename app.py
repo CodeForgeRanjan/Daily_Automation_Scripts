@@ -77,6 +77,10 @@ st.markdown("""
         margin-top: 15px;
         margin-bottom: 10px;
     }
+    div[data-testid="stRadio"] > label {
+        margin-bottom: 15px !important;
+        font-weight: 600; 
+    }
     </style>
 """, unsafe_allow_html=True)
 
