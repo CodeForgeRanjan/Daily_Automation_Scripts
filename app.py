@@ -29,7 +29,7 @@ st.markdown("""
     .main-title {
         font-size: 40px;
         font-weight: bold;
-        color: #eeeeee;
+        # color: #eeeeee;
         text-align: center;
         padding: 10px;
         background: linear-gradient(90deg, #F9D423 0%, #FF4E50 100%);
@@ -50,7 +50,7 @@ st.markdown("""
     .section-header{
         font-size: 20px;
         font-weight: 600;
-        color: #f78b8b;
+        color: #C5D5E4;
         margin-top: 15px;
         margin-bottom: 10px;
     }
