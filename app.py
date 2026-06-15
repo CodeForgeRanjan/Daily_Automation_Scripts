@@ -42,7 +42,7 @@ st.markdown("""
     .sidebar-heading {
         font-size: 24px;
         font-weight: bold;
-        color: #918A87;
+        color: #619ea0;
         margin-bottom: 20px;
         text-shadow: 0px 0px 10px rgba(0,255,255,0.5);
         gap:1.5rem;
