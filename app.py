@@ -1085,3 +1085,5 @@ elif page == "Bridge Allocation":
                                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                                     use_container_width=True
                                 )
+                                except Exception as e:
+            st.error(f"Allocation Engine Failed: {e}")
