@@ -78,7 +78,7 @@ st.markdown("""
         margin-bottom: 10px;
     }
     div[data-testid="stRadio"] > label {
-        margin-bottom: 15px !important;
+        margin-bottom: 20px !important;
         font-weight: 600; 
     }
     </style>
