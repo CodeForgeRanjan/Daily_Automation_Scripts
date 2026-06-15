@@ -1128,4 +1128,3 @@ elif page == "Bridge Allocation":
 #     ### 🛡️ Secure Core Infrastructure Strategy
 #     To ensure complete alignment with data safety standards, this application executes entirely within the local machine's volatile memory (RAM) and local CPU. This **Client-Side execution design** guarantees zero data exposure, ensures strict compliance with corporate Data Loss Prevention (DLP) frameworks, and allows smooth execution without external cloud endpoints.
 #     """)
-    
