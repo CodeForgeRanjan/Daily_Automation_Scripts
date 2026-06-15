@@ -40,12 +40,9 @@ st.markdown("""
         border-radius: 5px;
     }
     .sidebar-heading {
-        font-size: 24px;
         font-weight: bold;
-        color: #619ea0;
-        margin-bottom: 20px;
-        text-shadow: 0px 0px 10px rgba(0,255,255,0.5);
-        gap:1.5rem;
+        color: #b79cfd;
+        margin-bottom: 23px;
     }
     .section-header{
         font-size: 20px;
