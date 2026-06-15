@@ -25,6 +25,11 @@ st.markdown("""
         border-radius: 10px;
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
+
+    div[data-testid="stRadio"]>label{
+    margin-bottom:12px;
+    font-weight:600;
+    }
     
     .main-title {
         font-size: 40px;
