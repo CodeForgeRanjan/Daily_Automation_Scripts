@@ -27,7 +27,7 @@ st.markdown("""
     }
 
     div[data-testid="stRadio"]>label{
-    margin-bottom:18px;
+    margin-bottom:1.5rem;
     font-weight:600;
     }
     
