@@ -6,17 +6,17 @@ import zipfile
 from PIL import Image, ImageOps  
 
 def play_celebration_confetti():
-    """Poori screen par patakhe phodne ke liye custom JavaScript inject engine"""
+    
     st.components.v1.html(
         """
         <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
         <script>
             function launch() {
-                // Blast 1: Left Side Se
+                // Blast 1
                 confetti({ particleCount: 150, spread: 80, origin: { x: 0, y: 0.6 } });
-                // Blast 2: Right Side Se
+                // Blast 2
                 confetti({ particleCount: 150, spread: 80, origin: { x: 1, y: 0.6 } });
-                // Blast 3: Center Se Thoda Oopar
+                // Blast 3
                 setTimeout(() => {
                     confetti({ particleCount: 200, spread: 100, origin: { y: 0.4 } });
                 }, 300);
@@ -24,7 +24,7 @@ def play_celebration_confetti():
             setTimeout(launch, 100);
         </script>
         """,
-        height=0, # Isse background mein silently chalega, screen par koi khali box nahi dikhega
+        height=0, 
     )
 
 # Page Setup & Styling
@@ -80,7 +80,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- GLOBAL SHORT NAMES MAPPING DICTIONARY
+# GLOBAL SHORT NAMES MAPPING DICTIONARY
 CITY_ALIAS_MAP = {
     "hyd": "Hyderabad",
     "blr": "Bangalore",
@@ -130,7 +130,7 @@ def clean_address(text):
         "DL-", "CARD", "card", "Adhar-", "Adhar No.", "DL", "Driving License", 
         "Driving Licence", "Driving Lic", "ADD","Driving Lc", "Licence", "License", 
         "Address", "Permanent Address", "Present Address", 
-        "CORRESPONDENCE ADDRESS", "CORRESPONDENCE", "PERMANENT:", "Auto_Flow" ,":", "-", ";", "#"
+        "CORRESPONDENCE ADDRESS", "CORRESPONDENCE", "PERMANENT:", "Auto_Flow" ,":", "-", ";", "#",","
     ]
     for word in unwanted:
         text = re.sub(word, '', text, flags=re.IGNORECASE)
@@ -213,7 +213,7 @@ st.sidebar.markdown(
     unsafe_allow_html=True
 )
 
-# ==================== PAGE FLOW ACTIONS ====================
+#  PAGE FLOW ACTIONS 
 
 if page == "Data Upload":
     st.markdown('<p class="main-title">Data CleanUp Dashboard</p>', unsafe_allow_html=True)
@@ -674,7 +674,7 @@ elif page == "Image And Docs Converted":
                     except Exception as e:
                         st.error(f"Bulk engine failure: {e}")
 
-# PAGE: MSG & EML CONVERSION TO PDF SUITE 
+#MSG & EML CONVERSION TO PDF SUITE 
 elif page == "MSG Conversion":
     import extract_msg
     from email import message_from_bytes
@@ -1054,9 +1054,9 @@ elif page == "Bridge Allocation":
                             # Create an in-memory excel stream with DUAL SHEETS using openpyxl
                             excel_buffer = io.BytesIO()
                             with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
-                                # Just User Name and ARS No
+                                # Just Name and No
                                 final_allocation_df.to_excel(writer, index=False, sheet_name='Allocation_List')
-                                # The static verification tracker counts record
+                                # The static tracker counts record
                                 final_tracker_df.to_excel(writer, index=False, sheet_name='Allocation_Tracker')
                                 
                             excel_output = excel_buffer.getvalue()
