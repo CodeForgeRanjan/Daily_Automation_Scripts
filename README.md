@@ -48,10 +48,10 @@ This module automates the manual dispatching of cases among team members, ensuri
 This application is architected under a Local-First / Offline-First Server Model (http://localhost:8501). By executing data processing workflows entirely within the local machine's volatile memory (RAM) and local CPU, the tool eliminates external network dependency. This Client-Side execution design guarantees zero data exposure, ensures strict compliance with corporate Data Loss Prevention (DLP) frameworks, and guarantees high-speed data processing without relying on external cloud endpoints.
 
 ### 1. Requirements
-Ensure Python is installed on your local machine.
+Ensure Python is installed local machine.
 
 ### 2. Installation
-Clone this repository to your local directory and install the necessary dependencies:
+Clone this repository to local directory and install the necessary dependencies:
 
 ```bash
 py -m pip install streamlit pandas openpyxl rapidfuzz pillow python-docx reportlab extract_msg
